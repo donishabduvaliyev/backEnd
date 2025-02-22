@@ -19,5 +19,7 @@ const ProductSchema = new Schema({
     id: String,
     items: [itemSchema] 
 });
+console.log(ProductSchema);
 
-export default model("Product", ProductSchema, "products-data");
+
+export default model("Product", ProductSchema, "productData");
