@@ -253,3 +253,14 @@ bot.on("web_app_data", (msg) => {
         bot.sendMessage(msg.chat.id, "❌ Error processing order.");
     }
 });
+
+
+
+
+bot.on("message", (msg) => {
+    if (msg.web_app_data) {
+        console.log("📩 Web App Data Received:", msg.web_app_data);
+    } else {
+        console.log("📩 Normal message received:", msg.text);
+    }
+});
