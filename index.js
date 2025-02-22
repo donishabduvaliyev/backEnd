@@ -68,6 +68,8 @@ app.get("/api/products", async (req, res) => {
 
 
 
+await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteWebhook`);
+
 
 
 
