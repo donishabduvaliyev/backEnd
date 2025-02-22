@@ -2,6 +2,8 @@
   "name": "bot_code",
   "version": "1.0.0",
   "description": "",
+  "type": "commonjs",
+
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,3 +22,5 @@
     "node-telegram-bot-api": "^0.66.0"
   }
 }
+
+
