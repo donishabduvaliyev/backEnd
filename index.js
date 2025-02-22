@@ -77,16 +77,7 @@ app.get("/api/products", async (req, res) => {
 
 
 
-const deleteWebhook = async () => {
-    try {
-        const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteWebhook`);
-        console.log("✅ Webhook deleted:", await response.json());
-    } catch (error) {
-        console.error("❌ Error deleting webhook:", error);
-    }
-};
-
-await deleteWebhook(); // ✅ Use `await` at top-level if using ES modules
+ // ✅ Use `await` at top-level if using ES modules
 
 
 
@@ -104,6 +95,25 @@ const bot = new TelegramBot(TOKEN, {
         autoStart: true,
     },
 });
+
+
+
+
+
+
+const deleteWebhook = async () => {
+    try {
+        const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteWebhook`);
+        console.log("✅ Webhook deleted:", await response.json());
+    } catch (error) {
+        console.error("❌ Error deleting webhook:", error);
+    }
+};
+
+await deleteWebhook();
+
+
+bot.setWebHook(`https://backend-xzwz.onrender.com/webhook`);
 
 const options = {
     reply_markup: {
