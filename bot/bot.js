@@ -1,7 +1,7 @@
-const TelegramBot = require("node-telegram-bot-api");
-const fs = require('fs');
+import TelegramBot from "node-telegram-bot-api";
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 require('dotenv').config();
-const { userInfo } = require("os");
+import { userInfo } from "os";
 
 
 
@@ -77,8 +77,8 @@ let userContacts = new Map();
 // const userInfo = new Map();
 
 
-if (fs.existsSync(CONTACTS_FILE)) {
-    const data = fs.readFileSync(CONTACTS_FILE, "utf8");
+if (existsSync(CONTACTS_FILE)) {
+    const data = readFileSync(CONTACTS_FILE, "utf8");
     userContacts = new Map(Object.entries(JSON.parse(data)));
 }
 
@@ -91,7 +91,7 @@ bot.on("contact", (msg) => {
 
         try {
             // ✅ Save to JSON file with error handling
-            fs.writeFileSync(CONTACTS_FILE, JSON.stringify(Object.fromEntries(userContacts)));
+            writeFileSync(CONTACTS_FILE, JSON.stringify(Object.fromEntries(userContacts)));
             console.log(`✅ Saved Contact: ${chatId} => ${msg.contact.phone_number}`);
         } catch (error) {
             console.error("❌ Failed to save contact:", error);

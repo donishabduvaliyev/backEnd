@@ -1,17 +1,17 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const connectDB = require("./config"); // Import connectDB
-const Product = require("./models/Product");  // Import Product model
+import express from "express";
+import { json } from "body-parser";
+import cors from "cors";
+import connectDB from "./config"; // Import connectDB
+import { find } from "./models/Product";  // Import Product model
 require("dotenv").config();
-const TelegramBot = require("node-telegram-bot-api");
-const fs = require('fs');
+import TelegramBot from "node-telegram-bot-api";
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 require('dotenv').config();
-const { userInfo } = require("os");
-const { log } = require("console");
+import { userInfo } from "os";
+import { log } from "console";
 
 const app = express();
-app.use(bodyParser.json());
+app.use(json());
 
 const allowedOrigins = [
     "http://localhost:5173", // Development frontend
@@ -51,7 +51,7 @@ app.get("/", (req, res) => {
 
 app.get("/api/products", async (req, res) => {
     try {
-        const products = await Product.find();
+        const products = await find();
         res.json(products);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -68,10 +68,15 @@ app.get("/api/products", async (req, res) => {
 
 
 
-await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteWebhook`);
 
 
 
+const deleteWebhook = async () => {
+    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteWebhook`);
+    console.log("✅ Webhook deleted successfully");
+};
+
+deleteWebhook();
 
 
 
@@ -149,8 +154,8 @@ let userContacts = new Map();
 // const userInfo = new Map();
 
 
-if (fs.existsSync(CONTACTS_FILE)) {
-    const data = fs.readFileSync(CONTACTS_FILE, "utf8");
+if (existsSync(CONTACTS_FILE)) {
+    const data = readFileSync(CONTACTS_FILE, "utf8");
     userContacts = new Map(Object.entries(JSON.parse(data)));
 }
 
@@ -163,7 +168,7 @@ bot.on("contact", (msg) => {
 
         try {
             // ✅ Save to JSON file with error handling
-            fs.writeFileSync(CONTACTS_FILE, JSON.stringify(Object.fromEntries(userContacts)));
+            writeFileSync(CONTACTS_FILE, JSON.stringify(Object.fromEntries(userContacts)));
             console.log(`✅ Saved Contact: ${chatId} => ${msg.contact.phone_number}`);
         } catch (error) {
             console.error("❌ Failed to save contact:", error);
