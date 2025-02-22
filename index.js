@@ -203,14 +203,29 @@ bot.on("contact", (msg) => {
 
 
 
-bot.on("web_app_data", (ctx) => {
+bot.on("web_app_data", (msg) => {
     try {
-        const data = JSON.parse(ctx.web_app_data?.data); // Parse received JSON
-        const user = data[0].user; // First object → user info
-        const cart = data[1].cart; // Second object → cart items
-        console.log(ctx.web_app_data?.data);
+        if (!msg.web_app_data?.data) {
+            bot.sendMessage(msg.chat.id, "❌ No order data received.");
+            return;
+        }
 
+        const data = JSON.parse(msg.web_app_data.data); // Parse received JSON
 
+        if (!Array.isArray(data) || data.length < 2) {
+            bot.sendMessage(msg.chat.id, "❌ Invalid order format.");
+            return;
+        }
+
+        const user = data[0]?.user;  // First object → user info
+        const cart = data[1]?.cart;  // Second object → cart items
+
+        if (!user || !cart) {
+            bot.sendMessage(msg.chat.id, "❌ Missing order details.");
+            return;
+        }
+
+        console.log("📩 Received order data:", data);
 
         let orderMessage = `📝 New Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
@@ -219,7 +234,6 @@ bot.on("web_app_data", (ctx) => {
         }
 
         orderMessage += `\n🛒 Order Items:\n`;
-
         cart.forEach((item, index) => {
             orderMessage += `\n${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽`;
         });
@@ -230,12 +244,12 @@ bot.on("web_app_data", (ctx) => {
 
         orderMessage += `\n✅ Order received!`;
 
-        // Send order details to the restaurant chat
-        // ctx.reply(orderMessage);
-        console.log(orderMessage);
+        // ✅ Send order details to restaurant chat
+        bot.sendMessage(msg.chat.id, orderMessage);
+        console.log("✅ Order sent to chat:", msg.chat.id);
 
     } catch (error) {
-        console.error("Error processing web_app_data:", error);
-        ctx.reply("❌ Error processing order.");
+        console.error("❌ Error processing web_app_data:", error);
+        bot.sendMessage(msg.chat.id, "❌ Error processing order.");
     }
 });
