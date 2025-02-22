@@ -1,6 +1,8 @@
 import TelegramBot from "node-telegram-bot-api";
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-require('dotenv').config();
+import dotenv from "dotenv";
+dotenv.config();
+
 import { userInfo } from "os";
 
 
