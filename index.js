@@ -1,20 +1,21 @@
 import express from "express";
-
 import bodyParser from "body-parser";
-const { json } = bodyParser; // Extract `json`
+
 
 import cors from "cors";
 import connectDB from "./config.js"; // Import connectDB
 import Product from "./models/Product.js";  // Import Product model
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
+
 import TelegramBot from "node-telegram-bot-api";
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-require('dotenv').config();
 import { userInfo } from "os";
 import { log } from "console";
 
 const app = express();
-app.use(json());
+app.use(bodyParser.json());
+
 
 const allowedOrigins = [
     "http://localhost:5173", // Development frontend
@@ -54,7 +55,7 @@ app.get("/", (req, res) => {
 
 app.get("/api/products", async (req, res) => {
     try {
-        const products = await find();
+        const products = await Product.find();
         res.json(products);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -75,11 +76,16 @@ app.get("/api/products", async (req, res) => {
 
 
 const deleteWebhook = async () => {
-    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteWebhook`);
-    console.log("✅ Webhook deleted successfully");
+    try {
+        const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteWebhook`);
+        console.log("✅ Webhook deleted:", await response.json());
+    } catch (error) {
+        console.error("❌ Error deleting webhook:", error);
+    }
 };
 
-deleteWebhook();
+await deleteWebhook(); // ✅ Use `await` at top-level if using ES modules
+
 
 
 
