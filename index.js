@@ -2,7 +2,7 @@ import express from "express";
 import { json } from "body-parser";
 import cors from "cors";
 import connectDB from "./config.js"; // Import connectDB
-import { find } from "./models/Product.js";  // Import Product model
+import Product from "./models/Product.js";  // Import Product model
 require("dotenv").config();
 import TelegramBot from "node-telegram-bot-api";
 import { existsSync, readFileSync, writeFileSync } from 'fs';
