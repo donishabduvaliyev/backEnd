@@ -16,6 +16,8 @@ import { log } from "console";
 const app = express();
 app.use(bodyParser.json());
 
+console.log('running');
+
 
 const allowedOrigins = [
     "http://localhost:5173", // Development frontend
