@@ -1,53 +1,40 @@
 import express from "express";
 import bodyParser from "body-parser";
-
-
 import cors from "cors";
-import connectDB from "./config.js"; // Import connectDB
-import Product from "./models/Product.js";  // Import Product model
 import dotenv from "dotenv";
-dotenv.config();
-
+import connectDB from "./config.js";
+import Product from "./models/Product.js";
 import TelegramBot from "node-telegram-bot-api";
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { userInfo } from "os";
-import { log } from "console";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+
+dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
 
-console.log('running');
-
-
+// ✅ Allowed frontend origins
 const allowedOrigins = [
-    "http://localhost:5173", // Development frontend
-    "https://test-web-site-template.netlify.app", // ✅ Netlify frontend
+    "http://localhost:5173",
+    "https://test-web-site-template.netlify.app",
     "https://web.telegram.org"
-
 ];
-
-// app.listen(5000, "0.0.0.0", () => console.log("Server running..."));
-
 
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin || allowedOrigins.includes(origin) || origin.includes("web.telegram.org")) {
             callback(null, true);
         } else {
             callback(new Error("Not allowed by CORS"));
         }
     },
     methods: "GET,POST",
-    allowedHeaders: "Content-Type"
+    allowedHeaders: "Content-Type",
+    credentials: true
 }));
 
-
-// ✅ Connect to MongoDB Before Starting Server
+// ✅ Connect to MongoDB before starting the server
 connectDB().then(() => {
-    // app.listen(5000, () => console.log(`🚀 Server running on http://192.168.172.33:5000`));
-
-    app.listen(5000, "0.0.0.0", () => console.log("Server running..."));
-
+    app.listen(5000, "0.0.0.0", () => console.log("🚀 Server running on port 5000"));
 });
 
 // ✅ API Routes
@@ -60,29 +47,12 @@ app.get("/api/products", async (req, res) => {
         const products = await Product.find();
         res.json(products);
     } catch (error) {
+        console.error("Error fetching products:", error);
         res.status(500).json({ error: error.message });
     }
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
- // ✅ Use `await` at top-level if using ES modules
-
-
-
-
-
+// ✅ Telegram Bot Setup
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 if (!TOKEN) {
     console.error("❌ Telegram Bot Token is missing in environment variables.");
@@ -91,62 +61,56 @@ if (!TOKEN) {
 
 const bot = new TelegramBot(TOKEN, {
     polling: {
-        interval: 300, // Adjust polling interval
+        interval: 300,
         autoStart: true,
     },
 });
 
-
-
-
-
-
+// ✅ Delete webhook before polling (to avoid conflicts)
 const deleteWebhook = async () => {
     try {
-        const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteWebhook`);
+        const response = await fetch(`https://api.telegram.org/bot${TOKEN}/deleteWebhook`);
         console.log("✅ Webhook deleted:", await response.json());
     } catch (error) {
         console.error("❌ Error deleting webhook:", error);
     }
 };
 
-await deleteWebhook();
+(async () => {
+    await deleteWebhook();
+})();
 
-
+// ✅ Set up Webhook
 bot.setWebHook(`https://backend-xzwz.onrender.com/webhook`);
 
-const options = {
-    reply_markup: {
-        inline_keyboard: [
-            [
-                { text: "Salom", callback_data: "salom dedingiz" },
-                { text: "Xayr", callback_data: "xayr dedingiz" }
-            ],
-            [
-                { text: "Visit Website", url: "https://test-web-site-template.netlify.app/" }
-            ],
-            [
-                { text: "Share Contact", callback_data: "share_contact" }
-            ]
-        ]
-    }
-};
+// ✅ Webhook route for Telegram updates
+app.post("/webhook", (req, res) => {
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
+});
 
+// ✅ Handle /start command
 bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, "Hello! Welcome to the experimental bot.", options);
-    console.log("New user:", msg.chat.id);
-    console.log('bot is running');
+    const options = {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "Hello", callback_data: "hello" }],
+                [{ text: "Visit Website", url: "https://test-web-site-template.netlify.app/" }],
+                [{ text: "Share Contact", callback_data: "share_contact" }]
+            ]
+        }
+    };
 
+    bot.sendMessage(msg.chat.id, "Hello! Welcome to the bot.", options);
+    console.log("New user:", msg.chat.id);
 });
 
 // ✅ Handle Inline Buttons
 bot.on("callback_query", (msg) => {
     if (msg.data === "share_contact") {
-        bot.sendMessage(msg.message.chat.id, "Please share your contact by tapping the button below.", {
+        bot.sendMessage(msg.message.chat.id, "Please share your contact:", {
             reply_markup: {
-                keyboard: [
-                    [{ text: "📱 Share Contact", request_contact: true }]
-                ],
+                keyboard: [[{ text: "📱 Share Contact", request_contact: true }]],
                 one_time_keyboard: true,
                 resize_keyboard: true
             }
@@ -154,26 +118,9 @@ bot.on("callback_query", (msg) => {
     }
 });
 
-// bot.on("message", (msg) => {
-//     if (msg.web_app_data) {
-//         try {
-//             const orderData = JSON.parse(msg.web_app_data.data);
-//             let message = "🛒 Order Details:\n";
-//             orderData.items.forEach((item) => {
-//                 message += `${item.name} - ${item.quantity}x\n`;
-//             });
-//             message += `\n💰 Total: ${orderData.total} USD`;
-//             bot.sendMessage(msg.chat.id, message);
-//         } catch (error) {
-//             console.error("Error parsing WebApp data:", error);
-//         }
-//     }
-// });
-
+// ✅ Save user contacts
 const CONTACTS_FILE = "./contacts.json";
 let userContacts = new Map();
-// const userInfo = new Map();
-
 
 if (existsSync(CONTACTS_FILE)) {
     const data = readFileSync(CONTACTS_FILE, "utf8");
@@ -188,7 +135,6 @@ bot.on("contact", (msg) => {
         userContacts.set(chatId, msg.contact.phone_number);
 
         try {
-            // ✅ Save to JSON file with error handling
             writeFileSync(CONTACTS_FILE, JSON.stringify(Object.fromEntries(userContacts)));
             console.log(`✅ Saved Contact: ${chatId} => ${msg.contact.phone_number}`);
         } catch (error) {
@@ -201,24 +147,22 @@ bot.on("contact", (msg) => {
     }
 });
 
-
-
-bot.on("web_app_data", (msg) => {
+// ✅ Handle orders from Telegram WebApp
+bot.on("web_app_data", async (msg) => {
     try {
         if (!msg.web_app_data?.data) {
             bot.sendMessage(msg.chat.id, "❌ No order data received.");
             return;
         }
 
-        const data = JSON.parse(msg.web_app_data.data); // Parse received JSON
-
+        const data = JSON.parse(msg.web_app_data.data);
         if (!Array.isArray(data) || data.length < 2) {
             bot.sendMessage(msg.chat.id, "❌ Invalid order format.");
             return;
         }
 
-        const user = data[0]?.user;  // First object → user info
-        const cart = data[1]?.cart;  // Second object → cart items
+        const user = data[0]?.user;
+        const cart = data[1]?.cart;
 
         if (!user || !cart) {
             bot.sendMessage(msg.chat.id, "❌ Missing order details.");
@@ -244,9 +188,15 @@ bot.on("web_app_data", (msg) => {
 
         orderMessage += `\n✅ Order received!`;
 
-        // ✅ Send order details to restaurant chat
         bot.sendMessage(msg.chat.id, orderMessage);
         console.log("✅ Order sent to chat:", msg.chat.id);
+
+        // ✅ Forward order to restaurant's Telegram chat
+        // const RESTAURANT_CHAT_ID = process.env.RESTAURANT_CHAT_ID;
+        // if (RESTAURANT_CHAT_ID) {
+        //     bot.sendMessage(RESTAURANT_CHAT_ID, orderMessage);
+        //     console.log("✅ Order forwarded to restaurant chat:", RESTAURANT_CHAT_ID);
+        // }
 
     } catch (error) {
         console.error("❌ Error processing web_app_data:", error);
@@ -254,13 +204,15 @@ bot.on("web_app_data", (msg) => {
     }
 });
 
-
-
-
+// ✅ General message logging
 bot.on("message", (msg) => {
-    if (msg.web_app_data) {
-        console.log("📩 Web App Data Received:", msg.web_app_data);
-    } else {
-        console.log("📩 Normal message received:", msg.text);
+    try {
+        if (msg.web_app_data) {
+            console.log("📩 Web App Data Received:", JSON.stringify(msg.web_app_data, null, 2));
+        } else {
+            console.log("📩 Normal message received:", msg.text);
+        }
+    } catch (error) {
+        console.error("❌ Error in message handler:", error);
     }
 });
