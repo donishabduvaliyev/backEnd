@@ -148,28 +148,92 @@ bot.on("contact", (msg) => {
 });
 
 // ✅ Handle orders from Telegram WebApp
-bot.on("web_app_data", async (msg) => {
-    try {
-        if (!msg.web_app_data?.data) {
-            bot.sendMessage(msg.chat.id, "❌ No order data received.");
-            return;
-        }
+// bot.on("web_app_data", async (msg) => {
+//     try {
+//         if (!msg.web_app_data?.data) {
+//             bot.sendMessage(msg.chat.id, "❌ No order data received.");
+//             return;
+//         }
 
-        const data = JSON.parse(msg.web_app_data.data);
+//         const data = JSON.parse(msg.web_app_data.data);
+//         if (!Array.isArray(data) || data.length < 2) {
+//             bot.sendMessage(msg.chat.id, "❌ Invalid order format.");
+//             return;
+//         }
+
+//         const user = data[0]?.user;
+//         const cart = data[1]?.cart;
+
+//         if (!user || !cart) {
+//             bot.sendMessage(msg.chat.id, "❌ Missing order details.");
+//             return;
+//         }
+
+//         console.log("📩 Received order data:", data);
+
+//         let orderMessage = `📝 New Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
+
+//         if (user.deliveryType === "delivery") {
+//             orderMessage += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
+//         }
+
+//         orderMessage += `\n🛒 Order Items:\n`;
+//         cart.forEach((item, index) => {
+//             orderMessage += `\n${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽`;
+//         });
+
+//         if (user.comment) {
+//             orderMessage += `\n💬 Comment: ${user.comment}`;
+//         }
+
+//         orderMessage += `\n✅ Order received!`;
+
+//         bot.sendMessage(msg.chat.id, orderMessage);
+//         console.log("✅ Order sent to chat:", msg.chat.id);
+
+//         // ✅ Forward order to restaurant's Telegram chat
+//         // const RESTAURANT_CHAT_ID = process.env.RESTAURANT_CHAT_ID;
+//         // if (RESTAURANT_CHAT_ID) {
+//         //     bot.sendMessage(RESTAURANT_CHAT_ID, orderMessage);
+//         //     console.log("✅ Order forwarded to restaurant chat:", RESTAURANT_CHAT_ID);
+//         // }
+
+//     } catch (error) {
+//         console.error("❌ Error processing web_app_data:", error);
+//         bot.sendMessage(msg.chat.id, "❌ Error processing order.");
+//     }
+// });
+
+// ✅ General message logging
+bot.on("message", (msg) => {
+    try {
+        if (msg.web_app_data) {
+            console.log("📩 Web App Data Received:", JSON.stringify(msg.web_app_data, null, 2));
+        } else {
+            console.log("📩 Normal message received:", msg.text);
+        }
+    } catch (error) {
+        console.error("❌ Error in message handler:", error);
+    }
+});
+
+
+
+app.post("/web-data", async (req, res) => {
+    try {
+        const data = req.body;
+        console.log("📩 Received order data from frontend:", data);
+
         if (!Array.isArray(data) || data.length < 2) {
-            bot.sendMessage(msg.chat.id, "❌ Invalid order format.");
-            return;
+            return res.status(400).json({ error: "❌ Invalid order format." });
         }
 
         const user = data[0]?.user;
         const cart = data[1]?.cart;
 
         if (!user || !cart) {
-            bot.sendMessage(msg.chat.id, "❌ Missing order details.");
-            return;
+            return res.status(400).json({ error: "❌ Missing order details." });
         }
-
-        console.log("📩 Received order data:", data);
 
         let orderMessage = `📝 New Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
@@ -188,31 +252,14 @@ bot.on("web_app_data", async (msg) => {
 
         orderMessage += `\n✅ Order received!`;
 
-        bot.sendMessage(msg.chat.id, orderMessage);
-        console.log("✅ Order sent to chat:", msg.chat.id);
+        // ✅ Send to Telegram bot
+        // bot.sendMessage(process.env.RESTAURANT_CHAT_ID, orderMessage);
+        console.log("✅ Order sent to restaurant chat:", orderMessage);
 
-        // ✅ Forward order to restaurant's Telegram chat
-        // const RESTAURANT_CHAT_ID = process.env.RESTAURANT_CHAT_ID;
-        // if (RESTAURANT_CHAT_ID) {
-        //     bot.sendMessage(RESTAURANT_CHAT_ID, orderMessage);
-        //     console.log("✅ Order forwarded to restaurant chat:", RESTAURANT_CHAT_ID);
-        // }
+        res.json({ success: true, message: "✅ Order received and sent to Telegram bot." });
 
     } catch (error) {
-        console.error("❌ Error processing web_app_data:", error);
-        bot.sendMessage(msg.chat.id, "❌ Error processing order.");
-    }
-});
-
-// ✅ General message logging
-bot.on("message", (msg) => {
-    try {
-        if (msg.web_app_data) {
-            console.log("📩 Web App Data Received:", JSON.stringify(msg.web_app_data, null, 2));
-        } else {
-            console.log("📩 Normal message received:", msg.text);
-        }
-    } catch (error) {
-        console.error("❌ Error in message handler:", error);
+        console.error("❌ Error processing order:", error);
+        res.status(500).json({ error: "❌ Internal server error." });
     }
 });
