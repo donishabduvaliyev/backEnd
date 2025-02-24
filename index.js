@@ -13,7 +13,6 @@ const app = express();
 app.use(bodyParser.json());
 
 
-const OWNER_CHAT_IDS = process.env.OWNER_CHAT_IDS.split(","); // Add owner chat IDs in .env, comma-separated
 
 // ✅ Allowed frontend origins
 const allowedOrigins = [
@@ -222,6 +221,10 @@ bot.on("message", (msg) => {
 
 
 
+const OWNER_CHAT_IDS = process.env.OWNER_CHAT_IDS.split(",").map(id => id.trim());
+
+const userOrders = new Map(); // Store user chat IDs and their phone numbers
+
 app.post("/web-data", async (req, res) => {
     try {
         const data = req.body;
@@ -234,9 +237,12 @@ app.post("/web-data", async (req, res) => {
         const user = data[0]?.user;
         const cart = data[1]?.cart;
 
-        if (!user || !cart) {
-            return res.status(400).json({ error: "❌ Missing order details." });
+        if (!user || !cart || !user.chatId) {  // Ensure chatId is received
+            return res.status(400).json({ error: "❌ Missing order details or chat ID." });
         }
+
+        // Save user chat ID for later order updates
+        userOrders.set(user.phone, user.chatId);
 
         let orderMessage = `📝 New Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
@@ -255,12 +261,7 @@ app.post("/web-data", async (req, res) => {
 
         orderMessage += `\n✅ Order received!`;
 
-        // ✅ Send to Telegram bot
-        // bot.sendMessage(process.env.RESTAURANT_CHAT_ID, orderMessage);
-        console.log("✅ Order sent to restaurant chat:", orderMessage);
-
-        res.json({ success: true, message: "✅ Order received and sent to Telegram bot." });
-
+        // ✅ Send order to all restaurant owners
         OWNER_CHAT_IDS.forEach(chatId => {
             bot.sendMessage(chatId, orderMessage, {
                 reply_markup: {
@@ -271,16 +272,15 @@ app.post("/web-data", async (req, res) => {
                 }
             });
         });
-        
+
+        console.log("✅ Order sent to restaurant owners:", OWNER_CHAT_IDS);
+        res.json({ success: true, message: "✅ Order received and sent to Telegram bot." });
 
     } catch (error) {
         console.error("❌ Error processing order:", error);
         res.status(500).json({ error: "❌ Internal server error." });
     }
 });
-
-
-
 
 
 
@@ -291,14 +291,27 @@ bot.on("callback_query", async (callbackQuery) => {
 
     if (data.startsWith("accept_")) {
         const userPhone = data.split("_")[1];
+
+        if (userOrders.has(userPhone)) {
+            const userChatId = userOrders.get(userPhone);
+            bot.sendMessage(userChatId, "✅ Your order has been accepted!");
+        } else {
+            console.error("❌ User chat ID not found for phone:", userPhone);
+        }
+
         bot.sendMessage(chatId, "✅ Order accepted!");
-        bot.sendMessage(userPhone, "✅ Your order has been accepted!");
     }
+
     if (data.startsWith("deny_")) {
         const userPhone = data.split("_")[1];
+
+        if (userOrders.has(userPhone)) {
+            const userChatId = userOrders.get(userPhone);
+            bot.sendMessage(userChatId, "❌ Your order has been denied.");
+        } else {
+            console.error("❌ User chat ID not found for phone:", userPhone);
+        }
+
         bot.sendMessage(chatId, "❌ Order denied.");
-        bot.sendMessage(userPhone, "❌ Your order has been denied.");
     }
 });
-
-
