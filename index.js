@@ -231,6 +231,11 @@ app.post("/web-data", async (req, res) => {
         console.log("📩 Received order data from frontend:", data , OWNER_CHAT_IDS);
         console.log(OWNER_CHAT_IDS);
 
+
+        OWNER_CHAT_IDS.forEach(chatID =>{
+            bot.sendMessage(chatID, data , "new order from the user")
+        })
+
         if (!Array.isArray(data) || data.length < 2) {
             return res.status(400).json({ error: "❌ Invalid order format." });
         }
@@ -240,7 +245,7 @@ app.post("/web-data", async (req, res) => {
 
         console.log(cart);
         
-        if (!user || !cart || !user.chatId) {  // Ensure chatId is received
+        if (!user || !cart || !user.chatId) {  
             return res.status(400).json({ error: "❌ Missing order details or chat ID." });
         }
 
@@ -272,7 +277,7 @@ app.post("/web-data", async (req, res) => {
 
         // ✅ Send order to all restaurant owners
         OWNER_CHAT_IDS.forEach(chatId => {
-            bot.sendMessage(chatId, orderMessage, {
+            bot.sendMessage(chatId, orderMessage,  {
                 reply_markup: {
                     inline_keyboard: [
                         [{ text: "✅ Accept Order", callback_data: `accept_${user.chatId}` }],
