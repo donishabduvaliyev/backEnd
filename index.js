@@ -12,6 +12,9 @@ dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
+
+const OWNER_CHAT_IDS = process.env.OWNER_CHAT_IDS.split(","); // Add owner chat IDs in .env, comma-separated
+
 // ✅ Allowed frontend origins
 const allowedOrigins = [
     "http://localhost:5173",
@@ -263,3 +266,38 @@ app.post("/web-data", async (req, res) => {
         res.status(500).json({ error: "❌ Internal server error." });
     }
 });
+
+
+
+OWNER_CHAT_IDS.forEach(chatId => {
+    bot.sendMessage(chatId, orderMessage, {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "✅ Accept Order", callback_data: `accept_${user.phone}` }],
+                [{ text: "❌ Deny Order", callback_data: `deny_${user.phone}` }]
+            ]
+        }
+    });
+});
+
+
+
+bot.on("callback_query", async (callbackQuery) => {
+    const msg = callbackQuery.message;
+    const chatId = msg.chat.id;
+    const data = callbackQuery.data;
+
+    if (data.startsWith("accept_")) {
+        const userPhone = data.split("_")[1];
+        bot.sendMessage(chatId, "✅ Order accepted!");
+        bot.sendMessage(userPhone, "✅ Your order has been accepted!");
+    }
+    if (data.startsWith("deny_")) {
+        const userPhone = data.split("_")[1];
+        bot.sendMessage(chatId, "❌ Order denied.");
+        bot.sendMessage(userPhone, "❌ Your order has been denied.");
+    }
+});
+
+
+res.status(200).json({ message: "Order sent to restaurant owners" });
