@@ -261,6 +261,18 @@ app.post("/web-data", async (req, res) => {
 
         res.json({ success: true, message: "✅ Order received and sent to Telegram bot." });
 
+        OWNER_CHAT_IDS.forEach(chatId => {
+            bot.sendMessage(chatId, orderMessage, {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: "✅ Accept Order", callback_data: `accept_${user.phone}` }],
+                        [{ text: "❌ Deny Order", callback_data: `deny_${user.phone}` }]
+                    ]
+                }
+            });
+        });
+        
+
     } catch (error) {
         console.error("❌ Error processing order:", error);
         res.status(500).json({ error: "❌ Internal server error." });
@@ -269,16 +281,6 @@ app.post("/web-data", async (req, res) => {
 
 
 
-OWNER_CHAT_IDS.forEach(chatId => {
-    bot.sendMessage(chatId, orderMessage, {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: "✅ Accept Order", callback_data: `accept_${user.phone}` }],
-                [{ text: "❌ Deny Order", callback_data: `deny_${user.phone}` }]
-            ]
-        }
-    });
-});
 
 
 
