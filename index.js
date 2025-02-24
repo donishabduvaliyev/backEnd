@@ -233,7 +233,7 @@ app.post("/web-data", async (req, res) => {
 
 
         OWNER_CHAT_IDS.forEach(chatID =>{
-            bot.sendMessage(chatID, data )
+            bot.sendMessage(chatID, `new order from client , order: ${data}` )
         })
 
         if (!Array.isArray(data) || data.length < 2) {
