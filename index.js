@@ -261,6 +261,9 @@ app.post("/web-data", async (req, res) => {
 
         orderMessage += `\n✅ Order received!`;
 
+
+        console.log(OWNER_CHAT_IDS);
+
         // ✅ Send order to all restaurant owners
         OWNER_CHAT_IDS.forEach(chatId => {
             bot.sendMessage(chatId, orderMessage, {
@@ -271,6 +274,8 @@ app.post("/web-data", async (req, res) => {
                     ]
                 }
             });
+            .then(() => console.log(`✅ Message sent to owner: ${chatId}`))
+            .catch(err => console.error(`❌ Failed to send message: ${err}`));
         });
 
         console.log("✅ Order sent to restaurant owners:", OWNER_CHAT_IDS);
@@ -299,7 +304,10 @@ bot.on("callback_query", async (callbackQuery) => {
             console.error("❌ User chat ID not found for phone:", userPhone);
         }
 
+
         bot.sendMessage(chatId, "✅ Order accepted!");
+    }
+
     }
 
     if (data.startsWith("deny_")) {
