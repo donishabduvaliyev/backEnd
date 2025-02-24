@@ -302,4 +302,3 @@ bot.on("callback_query", async (callbackQuery) => {
 });
 
 
-res.status(200).json({ message: "Order sent to restaurant owners" });
