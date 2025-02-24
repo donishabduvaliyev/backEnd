@@ -228,13 +228,15 @@ const userOrders = new Map(); // Store user chat IDs and their phone numbers
 app.post("/web-data", async (req, res) => {
     try {
         const data = req.body;
-        console.log("📩 Received order data from frontend:", data , OWNER_CHAT_IDS);
+        console.log("📩 Received order data from frontend:", data, OWNER_CHAT_IDS);
         console.log(OWNER_CHAT_IDS);
 
 
-        OWNER_CHAT_IDS.forEach(chatID =>{
-            bot.sendMessage(chatID, `new order from client , order: ${data}` )
+        OWNER_CHAT_IDS.forEach(chatID => {
+            bot.sendMessage(chatID, `new order from client , order: ${data[1]?.cart} , user: ${data[0].user}`)
         })
+        console.log(data[0]?.user, data[1]?.cart);
+
 
         if (!Array.isArray(data) || data.length < 2) {
             return res.status(400).json({ error: "❌ Invalid order format." });
@@ -244,8 +246,8 @@ app.post("/web-data", async (req, res) => {
         const cart = data[1]?.cart;
 
         console.log(cart);
-        
-        if (!user || !cart || !user.chatId) {  
+
+        if (!user || !cart || !user.chatId) {
             return res.status(400).json({ error: "❌ Missing order details or chat ID." });
         }
 
@@ -273,11 +275,11 @@ app.post("/web-data", async (req, res) => {
 
 
         console.log(orderMessage);
-        
+
 
         // ✅ Send order to all restaurant owners
         OWNER_CHAT_IDS.forEach(chatId => {
-            bot.sendMessage(chatId, orderMessage,  {
+            bot.sendMessage(chatId, orderMessage, {
                 reply_markup: {
                     inline_keyboard: [
                         [{ text: "✅ Accept Order", callback_data: `accept_${user.chatId}` }],
