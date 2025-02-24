@@ -210,7 +210,7 @@ bot.on("contact", (msg) => {
 bot.on("message", (msg) => {
     try {
         if (msg.web_app_data) {
-            console.log("📩 Web App Data Received:", JSON.stringify(msg.web_app_data, null, 2));
+            console.log("📩 Web App Data Received: asosiy", JSON.stringify(msg.web_app_data, null, 2));
         } else {
             console.log("📩 Normal message received:", msg.text);
         }
@@ -228,7 +228,8 @@ const userOrders = new Map(); // Store user chat IDs and their phone numbers
 app.post("/web-data", async (req, res) => {
     try {
         const data = req.body;
-        console.log("📩 Received order data from frontend:", data);
+        console.log("📩 Received order data from frontend:", data , OWNER_CHAT_IDS);
+        console.log(OWNER_CHAT_IDS);
 
         if (!Array.isArray(data) || data.length < 2) {
             return res.status(400).json({ error: "❌ Invalid order format." });
@@ -262,7 +263,6 @@ app.post("/web-data", async (req, res) => {
         orderMessage += `\n✅ Order received!`;
 
 
-        console.log(OWNER_CHAT_IDS);
 
         // ✅ Send order to all restaurant owners
         OWNER_CHAT_IDS.forEach(chatId => {
