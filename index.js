@@ -231,9 +231,34 @@ app.post("/web-data", async (req, res) => {
         console.log("📩 Received order data from frontend:", data, OWNER_CHAT_IDS);
         console.log(OWNER_CHAT_IDS);
 
+        
+        const user = data[0].user;
+        const cart = data[1].cart;
+        
+        let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
+        
+        if (user.deliveryType === "delivery") {
+            message += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
+        }
+        
+        message += `\n🛒 Order Items:\n`;
+        
+        cart.forEach((item, index) => {
+            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
+        });
+        
+        if (user.comment) {
+            message += `💬 Comment: ${user.comment}`;
+        }
+        
+        console.log(message);
+        
+
+
+
 
         OWNER_CHAT_IDS.forEach(chatID => {
-            bot.sendMessage(chatID, `new order from client , order: ${data[1]?.cart} , user: ${data[0].user}`)
+            bot.sendMessage(chatID, `new order from client , order: ${cart} , user: ${user}`)
         })
         console.log(data[0]?.user, data[1]?.cart);
 
@@ -242,30 +267,30 @@ app.post("/web-data", async (req, res) => {
             return res.status(400).json({ error: "❌ Invalid order format." });
         }
 
-        const user = data[0]?.user;
-        const cart = data[1]?.cart;
+        const user1 = data[0]?.user;
+        const cart1= data[1]?.cart;
 
         console.log(cart);
 
-        if (!user || !cart || !user.chatId) {
+        if (!user1 || !cart1 || !user.chatId) {
             return res.status(400).json({ error: "❌ Missing order details or chat ID." });
         }
 
         // Save user chat ID for later order updates
         userOrders.set(user.phone, user.chatId);
 
-        let orderMessage = `📝 New Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
+        let orderMessage = `📝 New Order from ${user1.name}\n📞 Phone: ${user1.phone}\n📍 Delivery Type: ${user1.deliveryType}`;
 
         if (user.deliveryType === "delivery") {
-            orderMessage += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
+            orderMessage += `\n📌 Location: ${user1.location}\n📍 Coordinates: ${user1.coordinates}`;
         }
 
         orderMessage += `\n🛒 Order Items:\n`;
-        cart.forEach((item, index) => {
+        cart1.forEach((item, index) => {
             orderMessage += `\n${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽`;
         });
 
-        if (user.comment) {
+        if (user1.comment) {
             orderMessage += `\n💬 Comment: ${user.comment}`;
         }
 
