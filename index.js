@@ -234,6 +234,8 @@ app.post("/web-data", async (req, res) => {
 
         const user = data.user;
         const cart = data.cart;
+        console.log(user);
+        
 
         let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
