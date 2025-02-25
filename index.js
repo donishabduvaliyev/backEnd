@@ -410,9 +410,15 @@ bot.on("callback_query", async (callbackQuery) => {
     const chatId = msg.chat.id;
     const messageId = msg.message_id; // Needed for editing messages
     const data = callbackQuery.data;
+    console.log(chatId);
 
     // Extract the customer chat ID directly from the callback data
     const customerChatId = data.split("_")[1];
+
+    if (!customerChatId) {
+        console.error("❌ Customer chat ID missing in callback data:", data);
+        return;
+    }
 
     if (data.startsWith("accept_")) {
         bot.sendMessage(chatId, "✅ Order accepted!");
