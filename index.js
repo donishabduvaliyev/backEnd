@@ -238,7 +238,13 @@ app.post("/web-data", async (req, res) => {
         let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
         if (user.deliveryType === "delivery") {
-            message += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
+
+            const [latitude, longitude] = user.coordinates.split(",");
+
+            // ✅ Generate Google Maps Link
+            const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`
+            message += `\n📌 Location: ${user.location}\n📍 Coordinates: ${mapsLink}`;
+
         }
 
         message += `\n🛒 Order Items:\n`;
