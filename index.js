@@ -234,7 +234,8 @@ app.post("/web-data", async (req, res) => {
 
         const user = data.user;
         const cart = data.cart;
-        console.log(user);
+        console.log(user.userID.chatID);
+        const userChatIDfromWEB =user.userID.chatID
         
 
         let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
@@ -284,8 +285,8 @@ app.post("/web-data", async (req, res) => {
                 {
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: "✅ Accept Order", callback_data: `accept_${user.chatId}` }],
-                            [{ text: "❌ Deny Order", callback_data: `deny_${user.chatId}` }]
+                            [{ text: "✅ Accept Order", callback_data: `accept_${user.chatId}  ${userChatIDfromWEB}` }],
+                            [{ text: "❌ Deny Order", callback_data: `deny_${user.chatId} ${userChatIDfromWEB} `  }]
                         ]
                     }
                 }
@@ -413,6 +414,8 @@ bot.on("callback_query", async (callbackQuery) => {
     const messageId = msg.message_id; // Needed for editing messages
     const data = callbackQuery.data;
     console.log(chatId);
+    console.log('bu kllientni chat idsi  ' ,  data);
+    
 
     // Extract the customer chat ID directly from the callback data
     const customerChatId = data.split("_")[1];
