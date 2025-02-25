@@ -353,7 +353,6 @@ bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const data = callbackQuery.data;
-    const messageId = msg.message.message_id;
 
     const userPhone = data.split("_")[1];
 
@@ -381,7 +380,7 @@ bot.on("callback_query", async (callbackQuery) => {
         bot.sendMessage(userPhone, "❌ Your order has been denied.");
         bot.editMessageReplyMarkup(
             { inline_keyboard: [] },
-            { chat_id: chatId, message_id: messageId }
+            { chat_id: chatId }
         );
     }
 });
@@ -390,7 +389,6 @@ bot.on("callback_query", async (callbackQuery) => {
 bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
-    const messageId = msg.message.message_id;
     const data = callbackQuery.data;
 
     if (data.startsWith("done_")) {
@@ -399,7 +397,7 @@ bot.on("callback_query", async (callbackQuery) => {
         // ✅ Remove "Order Done" button after it's clicked
         bot.editMessageReplyMarkup(
             { inline_keyboard: [] },
-            { chat_id: chatId, message_id: messageId }
+            { chat_id: chatId}
         );
     }
 });
