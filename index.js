@@ -269,63 +269,14 @@ app.post("/web-data", async (req, res) => {
                 }
             )
         })
-        console.log(data[0]?.user, data[1]?.cart);
-
-
-        if (!Array.isArray(data) || data.length < 2) {
-            return res.status(400).json({ error: "❌ Invalid order format." });
-        }
-
-        const user1 = data[0]?.user;
-        const cart1 = data[1]?.cart;
-
-        console.log(cart);
-
-        if (!user1 || !cart1 || !user.chatId) {
-            return res.status(400).json({ error: "❌ Missing order details or chat ID." });
-        }
-
-        // Save user chat ID for later order updates
-        userOrders.set(user1.phone, user1.chatId);
-
-        let orderMessage = `📝 New Order from ${user1.name}\n📞 Phone: ${user1.phone}\n📍 Delivery Type: ${user1.deliveryType}`;
-
-        if (user1.deliveryType === "delivery") {
-            orderMessage += `\n📌 Location: ${user1.location}\n📍 Coordinates: ${user1.coordinates}`;
-        }
-
-        orderMessage += `\n🛒 Order Items:\n`;
-        cart1.forEach((item, index) => {
-            orderMessage += `\n${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽`;
-        });
-
-        if (user1.comment) {
-            orderMessage += `\n💬 Comment: ${user1.comment}`;
-        }
-
-        orderMessage += `\n✅ Order received!`;
 
 
 
 
-        console.log(orderMessage);
 
 
-        // ✅ Send order to all restaurant owners
-        OWNER_CHAT_IDS.forEach(chatId => {
-            bot.sendMessage(chatId, orderMessage, {
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: "✅ Accept Order", callback_data: `accept_${user.chatId}` }],
-                        [{ text: "❌ Deny Order", callback_data: `deny_${user.chatId}` }]
-                    ]
-                }
-            })
-                .then(() => console.log(`✅ Message sent to owner: ${chatId}`))
-                .catch(err => console.error(`❌ Failed to send message: ${err}`));
-        });
 
-        console.log("✅ Order sent to restaurant owners:", OWNER_CHAT_IDS);
+
         res.json({ success: true, message: "✅ Order received and sent to Telegram bot." });
 
     } catch (error) {
@@ -335,36 +286,44 @@ app.post("/web-data", async (req, res) => {
 });
 
 
+bot.on("callback_query", async (callbackQuery) => {
+    const msg = callbackQuery.message;
+    const chatId = msg.chat.id;
+    const data = callbackQuery.data;
 
-// bot.on("callback_query", async (callbackQuery) => {
-//     const msg = callbackQuery.message;
-//     const chatId = msg.chat.id;
-//     const data = callbackQuery.data;
+    if (data.startsWith("accept_")) {
+        const userPhone = data.split("_")[1];
 
-//     if (data.startsWith("accept_")) {
-//         const userPhone = data.split("_")[1];
+        if (userOrders.has(userPhone)) {
+            const userChatId = userOrders.get(userPhone); // ✅ Fix: Correct key used in get()
+            if (userChatId) {
+                bot.sendMessage(userChatId, "✅ Your order has been accepted!");
+            } else {
+                console.error("❌ User chat ID is undefined for phone:", userPhone);
+            }
+        } else {
+            console.error("❌ User chat ID not found for phone:", userPhone);
+        }
 
-//         if (userOrders.has(userPhone)) {
-//             const userChatId = userOrders.get(userChatId);
-//             bot.sendMessage(userChatId, "✅ Your order has been accepted!");
-//         } else {
-//             console.error("❌ User chat ID not found for phone:", userPhone);
-//         }
+        bot.sendMessage(chatId, "✅ Order accepted!");
+    }
 
-//         bot.sendMessage(chatId, "✅ Order accepted!");
-//     }
+    if (data.startsWith("deny_")) {
+        const userPhone = data.split("_")[1];
 
-//     if (data.startsWith("deny_")) {
-//         const userPhone = data.split("_")[1];
+        if (userOrders.has(userPhone)) {
+            const userChatId = userOrders.get(userPhone); // ✅ Fix: Correct key used in get()
+            if (userChatId) {
+                bot.sendMessage(userChatId, "❌ Your order has been denied.");
+            } else {
+                console.error("❌ User chat ID is undefined for phone:", userPhone);
+            }
+        } else {
+            console.error("❌ User chat ID not found for phone:", userPhone);
+        }
 
-//         if (userOrders.has(userPhone)) {
-//             const userChatId = userOrders.get();
-//             bot.sendMessage(userChatId, "❌ Your order has been denied.");
-//         } else {
-//             console.error("❌ User chat ID not found for phone:", userPhone);
-//         }
+        bot.sendMessage(chatId, "❌ Order denied.");
+    }
+});
 
-//         bot.sendMessage(chatId, "❌ Order denied.");
-//     }
-// });
 
