@@ -237,14 +237,28 @@ app.post("/web-data", async (req, res) => {
 
         let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
-        if (user.deliveryType === "delivery") {
+        // ✅ Check if `coordinates` exist and are in correct format
+        if (user.deliveryType === "delivery" && user.coordinates) {
+            let latitude, longitude;
 
-            const [latitude, longitude] = user.coordinates.split(",");
+            if (Array.isArray(user.coordinates) && user.coordinates.length === 2) {
+                // Case 1: If coordinates are an array: [latitude, longitude]
+                [latitude, longitude] = user.coordinates;
+            } else if (typeof user.coordinates === "string" && user.coordinates.includes(",")) {
+                // Case 2: If coordinates are a string: "latitude,longitude"
+                [latitude, longitude] = user.coordinates.split(",");
+            } else {
+                console.error("❌ Invalid coordinates format:", user.coordinates);
+                latitude = longitude = null;
+            }
 
-            // ✅ Generate Google Maps Link
-            const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`
-            message += `\n📌 Location: ${user.location}\n📍 Coordinates: ${mapsLink}`;
-
+            if (latitude && longitude) {
+                const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                orderMessage += `\n📌 Location: ${user.location}`;
+                orderMessage += `\n📍 [📍 View on Map](${mapsLink})`;  // Clickable link
+            } else {
+                orderMessage += `\n📌 Location: ${user.location} (Invalid coordinates)`;
+            }
         }
 
         message += `\n🛒 Order Items:\n`;
