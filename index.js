@@ -230,35 +230,44 @@ app.post("/web-data", async (req, res) => {
         const data = req.body;
         console.log("📩 Received order data from frontend:", data);
 
-        
+
 
         const user = data.user;
         const cart = data.cart;
-        
+
         let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
-        
+
         if (user.deliveryType === "delivery") {
             message += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
         }
-        
+
         message += `\n🛒 Order Items:\n`;
-        
+
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
         });
-        
+
         if (user.comment) {
             message += `💬 Comment: ${user.comment}`;
         }
-        
+
         console.log(message);
-        
+
 
 
 
 
         OWNER_CHAT_IDS.forEach(chatID => {
-            bot.sendMessage(chatID, `new order from client , ${message}`)
+            bot.sendMessage(chatID, `new order from client , ${message} `,
+                {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: "✅ Accept Order", callback_data: `accept_${user.chatId}` }],
+                            [{ text: "❌ Deny Order", callback_data: `deny_${user.chatId}` }]
+                        ]
+                    }
+                }
+            )
         })
         console.log(data[0]?.user, data[1]?.cart);
 
@@ -268,7 +277,7 @@ app.post("/web-data", async (req, res) => {
         }
 
         const user1 = data[0]?.user;
-        const cart1= data[1]?.cart;
+        const cart1 = data[1]?.cart;
 
         console.log(cart);
 
