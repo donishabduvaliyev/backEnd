@@ -349,52 +349,98 @@ app.post("/web-data", async (req, res) => {
 
 
 
+// bot.on("callback_query", async (callbackQuery) => {
+//     const msg = callbackQuery.message;
+//     const chatId = msg.chat.id;
+//     const data = callbackQuery.data;
+
+//     const userPhone = data.split("_")[1];
+
+//     if (data.startsWith("accept_")) {
+//         bot.sendMessage(chatId, "✅ Order accepted!");
+
+//         // ✅ Send message to the customer's chat ID directly
+//         bot.sendMessage(userPhone, "✅ Your order has been accepted!");
+
+
+//         bot.editMessageReplyMarkup(
+//             {
+//                 inline_keyboard: [
+//                     [{ text: "✅ Order Done", callback_data: `done_${chatId}` }]
+//                 ]
+//             },
+//             { chat_id: chatId }
+//         );
+//     }
+
+//     if (data.startsWith("deny_")) {
+//         bot.sendMessage(chatId, "❌ Order denied.");
+
+//         // ✅ Send message to the customer's chat ID directly
+//         bot.sendMessage(userPhone, "❌ Your order has been denied.");
+//         bot.editMessageReplyMarkup(
+//             { inline_keyboard: [] },
+//             { chat_id: chatId }
+//         );
+//     }
+// });
+
+
+// bot.on("callback_query", async (callbackQuery) => {
+//     const msg = callbackQuery.message;
+//     const chatId = msg.chat.id;
+//     const data = callbackQuery.data;
+
+//     if (data.startsWith("done_")) {
+//         bot.sendMessage(chatId, "✅ Order is marked as done!");
+
+//         // ✅ Remove "Order Done" button after it's clicked
+//         bot.editMessageReplyMarkup(
+//             { inline_keyboard: [] },
+//             { chat_id: chatId}
+//         );
+//     }
+// });
+
+
+
+
 bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
+    const messageId = msg.message_id; // Needed for editing messages
     const data = callbackQuery.data;
-    const messageId = msg.message_id; // Required for editing the message
-    const userPhone = data.split("_")[1];
+
+    // Extract the customer chat ID directly from the callback data
+    const customerChatId = data.split("_")[1];
 
     if (data.startsWith("accept_")) {
         bot.sendMessage(chatId, "✅ Order accepted!");
 
-        // ✅ Ensure you have the correct customer chat ID
-        const userChatId = userOrders.get(userPhone); // Retrieve stored chat ID
+        // ✅ Send message to the customer using their chat ID
+        bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
 
-        if (userChatId) {
-            bot.sendMessage(userChatId, "✅ Your order has been accepted!");
-        } else {
-            console.error("❌ User chat ID not found for phone:", userPhone);
-        }
-
-        // ✅ Update inline keyboard to show only "Order Done" button
+        // ✅ Update the inline keyboard to show "Order Done" button
         bot.editMessageReplyMarkup(
             {
                 inline_keyboard: [
-                    [{ text: "✅ Order Done", callback_data: `done_${chatId}` }]
+                    [{ text: "✅ Order Done", callback_data: `done_${customerChatId}` }]
                 ]
             },
-            { chat_id: chatId, message_id: messageId } // Added message_id
+            { chat_id: chatId, message_id: messageId }
         );
     }
 
     if (data.startsWith("deny_")) {
         bot.sendMessage(chatId, "❌ Order denied.");
 
-        // ✅ Ensure you have the correct customer chat ID
-        const userChatId = userOrders.get(userPhone); // Retrieve stored chat ID
-
-        if (userChatId) {
-            bot.sendMessage(userChatId, "❌ Your order has been denied.");
-        } else {
-            console.error("❌ User chat ID not found for phone:", userPhone);
-        }
+        // ✅ Notify the customer
+        bot.sendMessage(customerChatId, "❌ Your order has been denied.");
 
         // ✅ Remove inline keyboard
         bot.editMessageReplyMarkup(
             { inline_keyboard: [] },
-            { chat_id: chatId, message_id: messageId } // Added message_id
+            { chat_id: chatId, message_id: messageId }
         );
     }
 
@@ -404,7 +450,7 @@ bot.on("callback_query", async (callbackQuery) => {
         // ✅ Remove "Order Done" button after it's clicked
         bot.editMessageReplyMarkup(
             { inline_keyboard: [] },
-            { chat_id: chatId, message_id: messageId } // Added message_id
+            { chat_id: chatId, message_id: messageId }
         );
     }
 });
