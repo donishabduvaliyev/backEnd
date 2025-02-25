@@ -228,39 +228,38 @@ const userOrders = new Map(); // Store user chat IDs and their phone numbers
 app.post("/web-data", async (req, res) => {
     try {
         const data = req.body;
-        console.log("📩 Received order data from frontend:", data, OWNER_CHAT_IDS);
-        console.log(OWNER_CHAT_IDS);
+        console.log("📩 Received order data from frontend:", data);
 
-        console.log(data[0]);
+        console.log(data);
         
 
-        const user = data[0].user;
-        const cart = data[1].cart;
+        // const user = data[0].user;
+        // const cart = data[1].cart;
         
-        let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
+        // let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
         
-        if (user.deliveryType === "delivery") {
-            message += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
-        }
+        // if (user.deliveryType === "delivery") {
+        //     message += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
+        // }
         
-        message += `\n🛒 Order Items:\n`;
+        // message += `\n🛒 Order Items:\n`;
         
-        cart.forEach((item, index) => {
-            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
-        });
+        // cart.forEach((item, index) => {
+        //     message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
+        // });
         
-        if (user.comment) {
-            message += `💬 Comment: ${user.comment}`;
-        }
+        // if (user.comment) {
+        //     message += `💬 Comment: ${user.comment}`;
+        // }
         
-        console.log(message);
+        // console.log(message);
         
 
 
 
 
         OWNER_CHAT_IDS.forEach(chatID => {
-            bot.sendMessage(chatID, `new order from client , order: ${cart} , user: ${user}`)
+            bot.sendMessage(chatID, `new order from client , order: ${data} , user:`)
         })
         console.log(data[0]?.user, data[1]?.cart);
 
@@ -279,11 +278,11 @@ app.post("/web-data", async (req, res) => {
         }
 
         // Save user chat ID for later order updates
-        userOrders.set(user.phone, user.chatId);
+        userOrders.set(user1.phone, user1.chatId);
 
         let orderMessage = `📝 New Order from ${user1.name}\n📞 Phone: ${user1.phone}\n📍 Delivery Type: ${user1.deliveryType}`;
 
-        if (user.deliveryType === "delivery") {
+        if (user1.deliveryType === "delivery") {
             orderMessage += `\n📌 Location: ${user1.location}\n📍 Coordinates: ${user1.coordinates}`;
         }
 
@@ -293,7 +292,7 @@ app.post("/web-data", async (req, res) => {
         });
 
         if (user1.comment) {
-            orderMessage += `\n💬 Comment: ${user.comment}`;
+            orderMessage += `\n💬 Comment: ${user1.comment}`;
         }
 
         orderMessage += `\n✅ Order received!`;
