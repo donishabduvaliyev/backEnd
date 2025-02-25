@@ -457,6 +457,8 @@ bot.on("callback_query", async (callbackQuery) => {
 
     if (data.startsWith("done_")) {
         bot.sendMessage(chatId, "✅ Order is marked as done!");
+        bot.sendMessage(customerChatId, "✅ Your order has been done and will be delivered soon ");
+
 
         // ✅ Remove "Order Done" button after it's clicked
         bot.editMessageReplyMarkup(
