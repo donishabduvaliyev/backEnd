@@ -258,7 +258,7 @@ app.post("/web-data", async (req, res) => {
 
 
         OWNER_CHAT_IDS.forEach(chatID => {
-            bot.sendMessage(chatID, `new order from client , order: ${cart} , user: ${user}`)
+            bot.sendMessage(chatID, `new order from client , ${message}`)
         })
         console.log(data[0]?.user, data[1]?.cart);
 
