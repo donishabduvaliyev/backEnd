@@ -254,10 +254,10 @@ app.post("/web-data", async (req, res) => {
 
             if (latitude && longitude) {
                 const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                orderMessage += `\n📌 Location: ${user.location}`;
-                orderMessage += `\n📍 [📍 View on Map](${mapsLink})`;  // Clickable link
+                message += `\n📌 Location: ${user.location}`;
+                message += `\n📍 [📍 View on Map](${mapsLink})`;  // Clickable link
             } else {
-                orderMessage += `\n📌 Location: ${user.location} (Invalid coordinates)`;
+                message += `\n📌 Location: ${user.location} (Invalid coordinates)`;
             }
         }
 
