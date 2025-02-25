@@ -285,8 +285,8 @@ app.post("/web-data", async (req, res) => {
                 {
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: "✅ Accept Order", callback_data: `accept_${user.chatId}  ${userChatIDfromWEB}` }],
-                            [{ text: "❌ Deny Order", callback_data: `deny_${user.chatId} ${userChatIDfromWEB} `  }]
+                            [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}` }],
+                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB} `  }]
                         ]
                     }
                 }
