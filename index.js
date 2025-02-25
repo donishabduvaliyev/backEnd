@@ -230,36 +230,35 @@ app.post("/web-data", async (req, res) => {
         const data = req.body;
         console.log("📩 Received order data from frontend:", data);
 
-        console.log(data);
         
 
-        // const user = data[0].user;
-        // const cart = data[1].cart;
+        const user = data.user;
+        const cart = data.cart;
         
-        // let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
+        let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
         
-        // if (user.deliveryType === "delivery") {
-        //     message += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
-        // }
+        if (user.deliveryType === "delivery") {
+            message += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
+        }
         
-        // message += `\n🛒 Order Items:\n`;
+        message += `\n🛒 Order Items:\n`;
         
-        // cart.forEach((item, index) => {
-        //     message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
-        // });
+        cart.forEach((item, index) => {
+            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
+        });
         
-        // if (user.comment) {
-        //     message += `💬 Comment: ${user.comment}`;
-        // }
+        if (user.comment) {
+            message += `💬 Comment: ${user.comment}`;
+        }
         
-        // console.log(message);
+        console.log(message);
         
 
 
 
 
         OWNER_CHAT_IDS.forEach(chatID => {
-            bot.sendMessage(chatID, `new order from client , order: ${data.cart} , user: ${data.user}`)
+            bot.sendMessage(chatID, `new order from client , order: ${cart} , user: ${user}`)
         })
         console.log(data[0]?.user, data[1]?.cart);
 
