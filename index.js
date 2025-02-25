@@ -333,6 +333,7 @@ bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const data = callbackQuery.data;
+    const messageId = msg.message.message_id;
 
     const userPhone = data.split("_")[1];
 
@@ -346,7 +347,7 @@ bot.on("callback_query", async (callbackQuery) => {
         bot.editMessageReplyMarkup(
             {
                 inline_keyboard: [
-                    [{ text: "✅ Order Done", callback_data: `done_${userPhone}` }]
+                    [{ text: "✅ Order Done", callback_data: `done_${chatId}` }]
                 ]
             },
             { chat_id: chatId, message_id: messageId }
