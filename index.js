@@ -369,7 +369,7 @@ bot.on("callback_query", async (callbackQuery) => {
                     [{ text: "✅ Order Done", callback_data: `done_${chatId}` }]
                 ]
             },
-            { chat_id: chatId, message_id: messageId }
+            { chat_id: chatId }
         );
     }
 
