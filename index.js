@@ -231,7 +231,7 @@ app.post("/web-data", async (req, res) => {
         console.log("📩 Received order data from frontend:", data, OWNER_CHAT_IDS);
         console.log(OWNER_CHAT_IDS);
 
-        console.log(data[0].user);
+        console.log(data[0]);
         
 
         const user = data[0].user;
