@@ -93,18 +93,9 @@ app.post("/webhook", (req, res) => {
 
 // ✅ Handle /start command
 bot.onText(/\/start/, (msg) => {
-    const options = {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: "Hello", callback_data: "hello" }],
-                [{ text: "Visit Website", url: "https://test-web-site-template.netlify.app/" }],
-                [{ text: "Share Contact", callback_data: "share_contact" }]
-            ]
-        }
-    };
 
-    bot.sendMessage(msg.chat.id, "Hello! Welcome to the bot.", options);
-    console.log("New user:", msg.chat.id);
+    bot.sendMessage(msg.chat.id, "Hello! Welcome to the bot.");
+
 });
 
 // ✅ Handle Inline Buttons
@@ -149,62 +140,6 @@ bot.on("contact", (msg) => {
     }
 });
 
-// ✅ Handle orders from Telegram WebApp
-// bot.on("web_app_data", async (msg) => {
-//     try {
-//         if (!msg.web_app_data?.data) {
-//             bot.sendMessage(msg.chat.id, "❌ No order data received.");
-//             return;
-//         }
-
-//         const data = JSON.parse(msg.web_app_data.data);
-//         if (!Array.isArray(data) || data.length < 2) {
-//             bot.sendMessage(msg.chat.id, "❌ Invalid order format.");
-//             return;
-//         }
-
-//         const user = data[0]?.user;
-//         const cart = data[1]?.cart;
-
-//         if (!user || !cart) {
-//             bot.sendMessage(msg.chat.id, "❌ Missing order details.");
-//             return;
-//         }
-
-//         console.log("📩 Received order data:", data);
-
-//         let orderMessage = `📝 New Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
-
-//         if (user.deliveryType === "delivery") {
-//             orderMessage += `\n📌 Location: ${user.location}\n📍 Coordinates: ${user.coordinates}`;
-//         }
-
-//         orderMessage += `\n🛒 Order Items:\n`;
-//         cart.forEach((item, index) => {
-//             orderMessage += `\n${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽`;
-//         });
-
-//         if (user.comment) {
-//             orderMessage += `\n💬 Comment: ${user.comment}`;
-//         }
-
-//         orderMessage += `\n✅ Order received!`;
-
-//         bot.sendMessage(msg.chat.id, orderMessage);
-//         console.log("✅ Order sent to chat:", msg.chat.id);
-
-//         // ✅ Forward order to restaurant's Telegram chat
-//         // const RESTAURANT_CHAT_ID = process.env.RESTAURANT_CHAT_ID;
-//         // if (RESTAURANT_CHAT_ID) {
-//         //     bot.sendMessage(RESTAURANT_CHAT_ID, orderMessage);
-//         //     console.log("✅ Order forwarded to restaurant chat:", RESTAURANT_CHAT_ID);
-//         // }
-
-//     } catch (error) {
-//         console.error("❌ Error processing web_app_data:", error);
-//         bot.sendMessage(msg.chat.id, "❌ Error processing order.");
-//     }
-// });
 
 // ✅ General message logging
 bot.on("message", (msg) => {
@@ -235,8 +170,8 @@ app.post("/web-data", async (req, res) => {
         const user = data.user;
         const cart = data.cart;
         console.log(user.userID.chatID);
-        const userChatIDfromWEB =user.userID.chatID
-        
+        const userChatIDfromWEB = user.userID.chatID
+
 
         let message = `📝 Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
@@ -286,7 +221,7 @@ app.post("/web-data", async (req, res) => {
                     reply_markup: {
                         inline_keyboard: [
                             [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}` }],
-                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB} `  }]
+                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB} ` }]
                         ]
                     }
                 }
@@ -309,101 +244,6 @@ app.post("/web-data", async (req, res) => {
 });
 
 
-// bot.on("callback_query", async (callbackQuery) => {
-//     const msg = callbackQuery.message;
-//     const chatId = msg.chat.id;
-//     const data = callbackQuery.data;
-
-//     if (data.startsWith("accept_")) {
-//         const userPhone = data.split("_")[1];
-
-//         if (userOrders.has(userPhone)) {
-//             const userChatId = userOrders.get(userPhone); // ✅ Fix: Correct key used in get()
-//             if (userChatId) {
-//                 bot.sendMessage(userChatId, "✅ Your order has been accepted!");
-//             } else {
-//                 console.error("❌ User chat ID is undefined for phone:", userPhone);
-//             }
-//         } else {
-//             console.error("❌ User chat ID not found for phone:", userPhone);
-//         }
-
-//         bot.sendMessage(chatId, "✅ Order accepted!");
-//     }
-
-//     if (data.startsWith("deny_")) {
-//         const userPhone = data.split("_")[1];
-
-//         if (userOrders.has(userPhone)) {
-//             const userChatId = userOrders.get(userPhone); // ✅ Fix: Correct key used in get()
-//             if (userChatId) {
-//                 bot.sendMessage(userChatId, "❌ Your order has been denied.");
-//             } else {
-//                 console.error("❌ User chat ID is undefined for phone:", userPhone);
-//             }
-//         } else {
-//             console.error("❌ User chat ID not found for phone:", userPhone);
-//         }
-
-//         bot.sendMessage(chatId, "❌ Order denied.");
-//     }
-// });
-
-
-
-
-// bot.on("callback_query", async (callbackQuery) => {
-//     const msg = callbackQuery.message;
-//     const chatId = msg.chat.id;
-//     const data = callbackQuery.data;
-
-//     const userPhone = data.split("_")[1];
-
-//     if (data.startsWith("accept_")) {
-//         bot.sendMessage(chatId, "✅ Order accepted!");
-
-//         // ✅ Send message to the customer's chat ID directly
-//         bot.sendMessage(userPhone, "✅ Your order has been accepted!");
-
-
-//         bot.editMessageReplyMarkup(
-//             {
-//                 inline_keyboard: [
-//                     [{ text: "✅ Order Done", callback_data: `done_${chatId}` }]
-//                 ]
-//             },
-//             { chat_id: chatId }
-//         );
-//     }
-
-//     if (data.startsWith("deny_")) {
-//         bot.sendMessage(chatId, "❌ Order denied.");
-
-//         // ✅ Send message to the customer's chat ID directly
-//         bot.sendMessage(userPhone, "❌ Your order has been denied.");
-//         bot.editMessageReplyMarkup(
-//             { inline_keyboard: [] },
-//             { chat_id: chatId }
-//         );
-//     }
-// });
-
-
-// bot.on("callback_query", async (callbackQuery) => {
-//     const msg = callbackQuery.message;
-//     const chatId = msg.chat.id;
-//     const data = callbackQuery.data;
-
-//     if (data.startsWith("done_")) {
-//         bot.sendMessage(chatId, "✅ Order is marked as done!");
-
-//         // ✅ Remove "Order Done" button after it's clicked
-//         bot.editMessageReplyMarkup(
-//             { inline_keyboard: [] },
-//             { chat_id: chatId}
-//         );
-//     }
-// });
 
 
 
@@ -414,8 +254,8 @@ bot.on("callback_query", async (callbackQuery) => {
     const messageId = msg.message_id; // Needed for editing messages
     const data = callbackQuery.data;
     console.log(chatId);
-    console.log('bu kllientni chat idsi  ' ,  data);
-    
+    console.log('bu kllientni chat idsi  ', data);
+
 
     // Extract the customer chat ID directly from the callback data
     const customerChatId = data.split("_")[1];
