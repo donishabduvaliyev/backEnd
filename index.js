@@ -192,22 +192,32 @@ app.post("/web-data", async (req, res) => {
 
             if (latitude && longitude) {
                 const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                message += `\n📌 Location: ${user.location}`;
-                message += `\n📍 [📍 View on Map](${mapsLink})`;  // Clickable link
+                message += `\n📌 Manzil: ${user.location}`;
+                message += `\n📍 [📍 Xaritadan ko'rish](${mapsLink})`;  // Clickable link
             } else {
-                message += `\n📌 Location: ${user.location} (Invalid coordinates)`;
+                message += `\n📌 Manzil: ${user.location} (Invalid coordinates)`;
             }
         }
 
-        message += `\n🛒 Order Items:\n`;
+        let TotalPrice = 0
+        message += `\n🛒 Buyurtma:\n`;
 
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
+            TotalPrice += item.TotalPrice
         });
 
         if (user.comment) {
-            message += `💬 Comment: ${user.comment}`;
+            message += `💬 Kommentariya: ${user.comment}`;
         }
+
+
+
+
+
+        message += `Jami narx: ${TotalPrice
+            } `
+
 
         console.log(message);
 
