@@ -253,7 +253,7 @@ app.post("/web-data", async (req, res) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n , ${item.size}sm`;
            
             if (Array.isArray(item.topping) && item.topping.length > 0) {
-                message += `   🧀 Toppings: ${item.topping.map(topping => topping.name).join(", ")}\n`;
+                message += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
             }
 
         });
