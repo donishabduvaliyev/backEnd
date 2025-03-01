@@ -221,9 +221,26 @@ app.post("/web-data", async (req, res) => {
 
 
         if (user.deliveryType === "delivery" && user.coordinates) {
-            const [latitude, longitude] = user.coordinates.split(",");
-            const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-            message += `\n📌 Address: ${user.location}\n📍 [View on Map](${mapsLink})`;
+            let latitude, longitude;
+
+            if (Array.isArray(user.coordinates) && user.coordinates.length === 2) {
+                // Case 1: If coordinates are an array: [latitude, longitude]
+                [latitude, longitude] = user.coordinates;
+            } else if (typeof user.coordinates === "string" && user.coordinates.includes(",")) {
+                // Case 2: If coordinates are a string: "latitude,longitude"
+                [latitude, longitude] = user.coordinates.split(",");
+            } else {
+                console.error("❌ Invalid coordinates format:", user.coordinates);
+                latitude = longitude = null;
+            }
+
+            if (latitude && longitude) {
+                const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                message += `\n📌 Manzil: ${user.location}`;
+                message += `\n📍 [📍 Xaritadan ko'rish](${mapsLink})`;  // Clickable link
+            } else {
+                message += `\n📌 Manzil: ${user.location} (Invalid coordinates)`;
+            }
         }
 
         message += "\n🛒 Order Items:\n";
