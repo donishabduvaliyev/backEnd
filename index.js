@@ -233,8 +233,8 @@ app.post("/web-data", async (req, res) => {
                 {
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}` }],
-                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB} ` }]
+                            [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}_${TotalPrice}` }],
+                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB}_${TotalPrice} ` }]
                         ]
                     }
                 }
@@ -272,6 +272,7 @@ bot.on("callback_query", async (callbackQuery) => {
 
     // Extract the customer chat ID directly from the callback data
     const customerChatId = data.split("_")[1];
+    const OrderID = data.split("_")[2]
 
     if (!customerChatId) {
         console.error("❌ Customer chat ID missing in callback data:", data);
@@ -279,7 +280,7 @@ bot.on("callback_query", async (callbackQuery) => {
     }
 
     if (data.startsWith("accept_")) {
-        bot.sendMessage(chatId, "✅ Order accepted!");
+        bot.sendMessage(chatId, `✅ ${OrderID}  Order accepted!`);
 
         // ✅ Send message to the customer using their chat ID
         bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
@@ -296,7 +297,7 @@ bot.on("callback_query", async (callbackQuery) => {
     }
 
     if (data.startsWith("deny_")) {
-        bot.sendMessage(chatId, "❌ Order denied.");
+        bot.sendMessage(chatId, `❌ ${OrderID} Order denied.`);
 
         // ✅ Notify the customer
         bot.sendMessage(customerChatId, "❌ Your order has been denied.");
@@ -309,7 +310,7 @@ bot.on("callback_query", async (callbackQuery) => {
     }
 
     if (data.startsWith("done_")) {
-        bot.sendMessage(chatId, "✅ Order is marked as done!");
+        bot.sendMessage(chatId, `✅ ${OrderID} Order is marked as done!`);
         bot.sendMessage(customerChatId, "✅ Your order has been done and will be delivered soon ");
 
 
