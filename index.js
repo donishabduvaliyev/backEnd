@@ -301,7 +301,11 @@ bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const messageId = msg.message_id;
-    const [action, customerChatId, orderID] = callbackQuery.data.split("_");
+    const [action, customerChatId1, orderID1] = callbackQuery.data.split("_");
+
+
+    const customerChatId = callbackQuery.data.split("_")[1];
+    const OrderID = callbackQuery.data.split("_")[2]
 
     if (!customerChatId) {
         console.error("❌ Customer chat ID missing:", callbackQuery.data);
@@ -311,22 +315,22 @@ bot.on("callback_query", async (callbackQuery) => {
     try {
         switch (action) {
             case "accept":
-                await bot.sendMessage(chatId, `✅ Order ${orderID} accepted!`);
+                await bot.sendMessage(chatId, `✅ Order ${OrderID} accepted!`);
                 await bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
                 await bot.editMessageReplyMarkup(
-                    { inline_keyboard: [[{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${orderID}` }]] },
+                    { inline_keyboard: [[{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${OrderID}` }]] },
                     { chat_id: chatId, message_id: messageId }
                 );
                 break;
 
             case "deny":
-                await bot.sendMessage(chatId, `❌ Order ${orderID} denied.`);
+                await bot.sendMessage(chatId, `❌ Order ${OrderID} denied.`);
                 await bot.sendMessage(customerChatId, "❌ Your order has been denied.");
                 await bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
 
             case "done":
-                await bot.sendMessage(chatId, `✅ Order ${orderID} marked as done!`);
+                await bot.sendMessage(chatId, `✅ Order ${OrderID} marked as done!`);
                 await bot.sendMessage(customerChatId, "✅ Your order is completed and will be delivered soon.");
                 await bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
