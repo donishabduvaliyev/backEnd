@@ -255,7 +255,7 @@ app.post("/web-data", async (req, res) => {
             
             
             if (Array.isArray(item.toppings) && item.toppings.length > 0) {
-                message += `Toppings: ${item.toppings.join(", ")}\n`;
+                message += `   🧀 Toppings: ${item.toppings.join(", ")}\n`;
             }
 
         });
