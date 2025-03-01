@@ -171,7 +171,8 @@ app.post("/web-data", async (req, res) => {
         const cart = data.cart;
         console.log(user.userID.chatID);
         const userChatIDfromWEB = user.userID.chatID
-        const orderID = data.orderID
+        const orderID = data.orderID.id
+        const TotalPrice = data.orderID.price
 
 
         let message = `📝 ${orderID} Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
@@ -200,13 +201,9 @@ app.post("/web-data", async (req, res) => {
             }
         }
 
-        let TotalPrice = 0
+
         message += `\n🛒 Buyurtma:\n`;
 
-        cart.forEach((item, index) => {
-            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
-            TotalPrice += item.TotalPrice
-        });
 
         if (user.comment) {
             message += `💬 Kommentariya: ${user.comment}`;
@@ -220,7 +217,7 @@ app.post("/web-data", async (req, res) => {
             } `
 
 
-        console.log(message);
+
 
 
 
