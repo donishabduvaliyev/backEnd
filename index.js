@@ -162,6 +162,7 @@ app.use(express.urlencoded({ extended: true })); // ✅ Parses URL-encoded data
 
 app.post("/web-data", async (req, res) => {
     try {
+        console.log("📩 Full received order data:", JSON.stringify(req.body, null, 2))
         const data = req.body;
         console.log("📩 Received order data from frontend:", data);
 
