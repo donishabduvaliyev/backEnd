@@ -6,6 +6,7 @@ import connectDB from "./config.js";
 import Product from "./models/Product.js";
 import TelegramBot from "node-telegram-bot-api";
 import { existsSync, readFileSync, writeFileSync } from "fs";
+import { log } from "console";
 
 dotenv.config();
 
@@ -247,6 +248,10 @@ app.post("/web-data", async (req, res) => {
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
             message += `${item.size}\n`
+            console.log(item.size);
+            console.log(item.toppings);
+            
+            
             if (Array.isArray(item.toppings) && item.toppings.length > 0) {
                 message += `Toppings: ${item.toppings.join(", ")}\n`;
             }
@@ -316,7 +321,7 @@ const action = data.split("_")[0]
         console.error("❌ Customer chat ID missing:", callbackQuery.data);
         return;
     }
-    console.log(action);
+   
     
 
     try {
