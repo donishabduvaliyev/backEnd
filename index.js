@@ -251,11 +251,11 @@ app.post("/web-data", async (req, res) => {
             console.log(item.size);
             console.log(item.status);
             
-            console.log(item.toppings);
+            console.log(item.topping);
             
             
             if (Array.isArray(item.topping) && item.topping.length > 0) {
-                message += `   🧀 Toppings: ${item.topping.join(", ")}\n`;
+                message += `   🧀 Toppings: ${item.topping.map(topping => topping.name).join(", ")}\n`;
             }
 
         });
