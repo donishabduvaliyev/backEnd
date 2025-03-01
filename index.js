@@ -204,6 +204,11 @@ app.post("/web-data", async (req, res) => {
 
         message += `\n🛒 Buyurtma:\n`;
 
+        cart.forEach((item, index) => {
+            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
+
+        });
+
 
         if (user.comment) {
             message += `💬 Kommentariya: ${user.comment}`;
