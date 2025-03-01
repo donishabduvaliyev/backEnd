@@ -321,24 +321,24 @@ const action = data.split("_")[0]
     try {
         switch (action) {
             case "accept":
-                await bot.sendMessage(chatId, `✅ Order ${OrderID} accepted!`);
-                await bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
-                await bot.editMessageReplyMarkup(
+                 bot.sendMessage(chatId, `✅ Order ${OrderID} accepted!`);
+                 bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
+                 bot.editMessageReplyMarkup(
                     { inline_keyboard: [[{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${OrderID}` }]] },
                     { chat_id: chatId, message_id: messageId }
                 );
                 break;
 
             case "deny":
-                await bot.sendMessage(chatId, `❌ Order ${OrderID} denied.`);
-                await bot.sendMessage(customerChatId, "❌ Your order has been denied.");
-                await bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
+                 bot.sendMessage(chatId, `❌ Order ${OrderID} denied.`);
+                 bot.sendMessage(customerChatId, "❌ Your order has been denied.");
+                 bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
 
             case "done":
-                await bot.sendMessage(chatId, `✅ Order ${OrderID} marked as done!`);
-                await bot.sendMessage(customerChatId, "✅ Your order is completed and will be delivered soon.");
-                await bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
+                 bot.sendMessage(chatId, `✅ Order ${OrderID} marked as done!`);
+                 bot.sendMessage(customerChatId, "✅ Your order is completed and will be delivered soon.");
+                 bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
         }
     } catch (error) {
