@@ -165,7 +165,14 @@ app.post("/web-data", async (req, res) => {
         console.log("📩 Full received order data:", JSON.stringify(req.body, null, 2))
         const data = req.body;
         console.log("📩 Received order data from frontend:", data);
-
+        try {
+            req.body.cart.forEach(item => {
+                console.log("Item:", item);
+                console.log("Size:", item.size);
+            });
+        } catch (error) {
+            console.error("❌ Error:", error);
+        }
 
 
         const user = data.user;
@@ -253,14 +260,14 @@ app.post("/web-data", async (req, res) => {
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
             message += `${item.size}\n`
-            console.log('razmer1' ,item.size);
-            console.log('razmer2' ,item.size1);
-            console.log('razmer3' ,item.size2);
-            console.log('razmer4' ,item.size3);
-            console.log('razmer5' ,item.size4);
-            
-            
-            
+            console.log('razmer1', item.size);
+            console.log('razmer2', item.size1);
+            console.log('razmer3', item.size2);
+            console.log('razmer4', item.size3);
+            console.log('razmer5', item.size4);
+
+
+
             if (Array.isArray(item.topping) && item.topping.length > 0) {
                 message += `   🧀 Toppings: ${item.topping.map(topping => topping.name).join(", ")}\n`;
             }
@@ -316,9 +323,9 @@ bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const messageId = msg.message_id;
-    const data = callbackQuery.data  
+    const data = callbackQuery.data
 
-const action = data.split("_")[0]
+    const action = data.split("_")[0]
 
 
 
@@ -330,30 +337,30 @@ const action = data.split("_")[0]
         console.error("❌ Customer chat ID missing:", callbackQuery.data);
         return;
     }
-   
-    
+
+
 
     try {
         switch (action) {
             case "accept":
-                 bot.sendMessage(chatId, `✅ Order ${OrderID} accepted!`);
-                 bot.sendMessage(customerChatId, "✅ Sizning buyurtmangiz qabul qilindi!");
-                 bot.editMessageReplyMarkup(
+                bot.sendMessage(chatId, `✅ Order ${OrderID} accepted!`);
+                bot.sendMessage(customerChatId, "✅ Sizning buyurtmangiz qabul qilindi!");
+                bot.editMessageReplyMarkup(
                     { inline_keyboard: [[{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${OrderID}` }]] },
                     { chat_id: chatId, message_id: messageId }
                 );
                 break;
 
             case "deny":
-                 bot.sendMessage(chatId, `❌ Order ${OrderID} denied.`);
-                 bot.sendMessage(customerChatId, "❌ Sizning buyurtmangizzni qabul qilmaymiz.");
-                 bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
+                bot.sendMessage(chatId, `❌ Order ${OrderID} denied.`);
+                bot.sendMessage(customerChatId, "❌ Sizning buyurtmangizzni qabul qilmaymiz.");
+                bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
 
             case "done":
-                 bot.sendMessage(chatId, `✅ Order ${OrderID} marked as done!`);
-                 bot.sendMessage(customerChatId, "✅ Sizning buyurtmangiz tayyor va tez orada yetkaziladi");
-                 bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
+                bot.sendMessage(chatId, `✅ Order ${OrderID} marked as done!`);
+                bot.sendMessage(customerChatId, "✅ Sizning buyurtmangiz tayyor va tez orada yetkaziladi");
+                bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
         }
     } catch (error) {
