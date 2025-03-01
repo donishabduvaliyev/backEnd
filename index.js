@@ -246,10 +246,10 @@ app.post("/web-data", async (req, res) => {
         message += "\n🛒 Order Items:\n";
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
+            message += `${item.size}\n`
             if (Array.isArray(item.toppings) && item.toppings.length > 0) {
-                message += `   🧀 Toppings: ${item.toppings.map(topping => topping.name).join(", ")}\n`;
+                message += `Toppings: ${item.toppings.join(", ")}\n`;
             }
-            
 
         });
 
