@@ -301,56 +301,48 @@ bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const messageId = msg.message_id;
-    const data = callbackQuery.data;
-    console.log(chatId);
-    console.log('bu kllientni chat idsi  ', data);
+    const data = callbackQuery.data  
+
+const action = data.split("_")[0]
 
 
-    const customerChatId = data.split("_")[1];
-    const OrderID = data.split("_")[2]
+
+
+    const customerChatId = callbackQuery.data.split("_")[1];
+    const OrderID = callbackQuery.data.split("_")[2]
 
     if (!customerChatId) {
-        console.error("❌ Customer chat ID missing in callback data:", data);
+        console.error("❌ Customer chat ID missing:", callbackQuery.data);
         return;
     }
+    console.log(action);
+    
 
-    if (data.startsWith("accept_")) {
-        bot.sendMessage(chatId, `✅ ${OrderID}  Order accepted!`);
+    try {
+        switch (action) {
+            case "accept":
+                 bot.sendMessage(chatId, `✅ Order ${OrderID} accepted!`);
+                 bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
+                 bot.editMessageReplyMarkup(
+                    { inline_keyboard: [[{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${OrderID}` }]] },
+                    { chat_id: chatId, message_id: messageId }
+                );
+                break;
 
+            case "deny":
+                 bot.sendMessage(chatId, `❌ Order ${OrderID} denied.`);
+                 bot.sendMessage(customerChatId, "❌ Your order has been denied.");
+                 bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
+                break;
 
-        bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
-
-        bot.editMessageReplyMarkup(
-            {
-                inline_keyboard: [
-                    [{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${OrderID}` }]
-                ]
-            },
-            { chat_id: chatId, message_id: messageId }
-        );
-    }
-
-    if (data.startsWith("deny_")) {
-        bot.sendMessage(chatId, `❌ ${OrderID} Order denied.`);
-
-        bot.sendMessage(customerChatId, "❌ Your order has been denied.");
-
-        bot.editMessageReplyMarkup(
-            { inline_keyboard: [] },
-            { chat_id: chatId, message_id: messageId }
-        );
-    }
-
-    if (data.startsWith("done_")) {
-        const orderIDFromLastQuery = callbackQuery.data.split("_")[2]
-
-        bot.sendMessage(chatId, `✅ ${orderIDFromLastQuery} Order is marked as done!`);
-        bot.sendMessage(customerChatId, "✅ Your order has been done and will be delivered soon ");
-
-
-        bot.editMessageReplyMarkup(
-            { inline_keyboard: [] },
-            { chat_id: chatId, message_id: messageId }
-        );
+            case "done":
+                 bot.sendMessage(chatId, `✅ Order ${OrderID} marked as done!`);
+                 bot.sendMessage(customerChatId, "✅ Your order is completed and will be delivered soon.");
+                 bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
+                break;
+        }
+    } catch (error) {
+        console.error("❌ Error handling callback query:", error);
     }
 });
+
