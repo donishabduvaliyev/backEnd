@@ -248,10 +248,12 @@ app.post("/web-data", async (req, res) => {
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
             message += `${item.size}\n`
-            console.log(item.size);
-            console.log(item.status);
+            console.log('razmer1' ,item.size);
+            console.log('razmer2' ,item.size1);
+            console.log('razmer3' ,item.size2);
+            console.log('razmer4' ,item.size3);
+            console.log('razmer5' ,item.size4);
             
-            console.log(item.topping);
             
             
             if (Array.isArray(item.topping) && item.topping.length > 0) {
