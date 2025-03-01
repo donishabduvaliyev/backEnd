@@ -249,6 +249,8 @@ app.post("/web-data", async (req, res) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
             message += `${item.size}\n`
             console.log(item.size);
+            console.log(item.status);
+            
             console.log(item.toppings);
             
             
