@@ -70,7 +70,7 @@ const bot = new TelegramBot(TOKEN, {
 const deleteWebhook = async () => {
     try {
         const response = await fetch(`https://api.telegram.org/bot${TOKEN}/deleteWebhook`);
-        console.log("✅ Webhook deleted:", await response.json());
+        // console.log("✅ Webhook deleted:", await response.json());
     } catch (error) {
         console.error("❌ Error deleting webhook:", error);
     }
@@ -125,7 +125,7 @@ bot.on("contact", (msg) => {
 
         try {
             writeFileSync(CONTACTS_FILE, JSON.stringify(Object.fromEntries(userContacts)));
-            console.log(`✅ Saved Contact: ${chatId} => ${msg.contact.phone_number}`);
+            // console.log(`✅ Saved Contact: ${chatId} => ${msg.contact.phone_number}`);
         } catch (error) {
             console.error("❌ Failed to save contact:", error);
         }
@@ -164,7 +164,7 @@ app.post("/web-data", async (req, res) => {
 
         const user = data.user;
         const cart = data.cart;
-        console.log(user.userID.chatID);
+        // console.log(user.userID.chatID);
         const userChatIDfromWEB = user.userID.chatID
         const orderID = data.orderID.id
         const TotalPrice = data.orderID.price
@@ -301,7 +301,11 @@ bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const messageId = msg.message_id;
-    const [action, customerChatId1, orderID1] = callbackQuery.data.split("_");
+    const data = callbackQuery.data  
+
+const action = data.split("_")[0]
+
+
 
 
     const customerChatId = callbackQuery.data.split("_")[1];
@@ -311,6 +315,8 @@ bot.on("callback_query", async (callbackQuery) => {
         console.error("❌ Customer chat ID missing:", callbackQuery.data);
         return;
     }
+    console.log(action);
+    
 
     try {
         switch (action) {
