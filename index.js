@@ -162,17 +162,9 @@ app.use(express.urlencoded({ extended: true })); // ✅ Parses URL-encoded data
 
 app.post("/web-data", async (req, res) => {
     try {
-        console.log("📩 Full received order data:", JSON.stringify(req.body, null, 2))
         const data = req.body;
         console.log("📩 Received order data from frontend:", data);
-        try {
-            req.body.cart.forEach(item => {
-                console.log("Item:", item);
-                console.log("Size:", item.size);
-            });
-        } catch (error) {
-            console.error("❌ Error:", error);
-        }
+      
 
 
         const user = data.user;
@@ -260,11 +252,7 @@ app.post("/web-data", async (req, res) => {
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
             message += `${item.size}\n`
-            console.log('razmer1', item.size);
-            console.log('razmer2', item.size1);
-            console.log('razmer3', item.size2);
-            console.log('razmer4', item.size3);
-            console.log('razmer5', item.size4);
+    
 
 
 
