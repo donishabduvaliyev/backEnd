@@ -201,6 +201,9 @@ app.post("/web-data", async (req, res) => {
 
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
+            message += `${item.toppings.map((topping , index)=>{
+            index , topping
+            })}`
 
         });
 
@@ -282,7 +285,7 @@ bot.on("callback_query", async (callbackQuery) => {
         bot.editMessageReplyMarkup(
             {
                 inline_keyboard: [
-                    [{ text: "✅ Order Done", callback_data: `done_${customerChatId}` }]
+                    [{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${OrderID}` }]
                 ]
             },
             { chat_id: chatId, message_id: messageId }
@@ -301,7 +304,9 @@ bot.on("callback_query", async (callbackQuery) => {
     }
 
     if (data.startsWith("done_")) {
-        bot.sendMessage(chatId, `✅ ${OrderID} Order is marked as done!`);
+const orderIDFromLastQuery =callbackQuery.data.split("_")[2] 
+
+        bot.sendMessage(chatId, `✅ ${orderIDFromLastQuery} Order is marked as done!`);
         bot.sendMessage(customerChatId, "✅ Your order has been done and will be delivered soon ");
 
 
