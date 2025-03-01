@@ -14,7 +14,6 @@ app.use(bodyParser.json());
 
 
 
-// ✅ Allowed frontend origins
 const allowedOrigins = [
     "http://localhost:5173",
     "https://test-web-site-template.netlify.app",
@@ -34,12 +33,12 @@ app.use(cors({
     credentials: true
 }));
 
-// ✅ Connect to MongoDB before starting the server
+
 connectDB().then(() => {
     app.listen(5000, "0.0.0.0", () => console.log("🚀 Server running on port 5000"));
 });
 
-// ✅ API Routes
+
 app.get("/", (req, res) => {
     res.send("Server is running!");
 });
@@ -54,7 +53,7 @@ app.get("/api/products", async (req, res) => {
     }
 });
 
-// ✅ Telegram Bot Setup
+
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 if (!TOKEN) {
     console.error("❌ Telegram Bot Token is missing in environment variables.");
@@ -68,7 +67,6 @@ const bot = new TelegramBot(TOKEN, {
     },
 });
 
-// ✅ Delete webhook before polling (to avoid conflicts)
 const deleteWebhook = async () => {
     try {
         const response = await fetch(`https://api.telegram.org/bot${TOKEN}/deleteWebhook`);
@@ -82,23 +80,21 @@ const deleteWebhook = async () => {
     await deleteWebhook();
 })();
 
-// ✅ Set up Webhook
 bot.setWebHook(`https://backend-xzwz.onrender.com/webhook`);
 
-// ✅ Webhook route for Telegram updates
+
 app.post("/webhook", (req, res) => {
     bot.processUpdate(req.body);
     res.sendStatus(200);
 });
 
-// ✅ Handle /start command
 bot.onText(/\/start/, (msg) => {
 
     bot.sendMessage(msg.chat.id, "Hello! Welcome to the bot.");
 
 });
 
-// ✅ Handle Inline Buttons
+
 bot.on("callback_query", (msg) => {
     if (msg.data === "share_contact") {
         bot.sendMessage(msg.message.chat.id, "Please share your contact:", {
@@ -111,7 +107,7 @@ bot.on("callback_query", (msg) => {
     }
 });
 
-// ✅ Save user contacts
+
 const CONTACTS_FILE = "./contacts.json";
 let userContacts = new Map();
 
@@ -141,7 +137,6 @@ bot.on("contact", (msg) => {
 });
 
 
-// ✅ General message logging
 bot.on("message", (msg) => {
     try {
         if (msg.web_app_data) {
@@ -158,7 +153,7 @@ bot.on("message", (msg) => {
 
 const OWNER_CHAT_IDS = process.env.OWNER_CHAT_IDS.split(",").map(id => id.trim());
 
-const userOrders = new Map(); // Store user chat IDs and their phone numbers
+const userOrders = new Map(); 
 
 app.post("/web-data", async (req, res) => {
     try {
@@ -264,13 +259,12 @@ app.post("/web-data", async (req, res) => {
 bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
-    const messageId = msg.message_id; // Needed for editing messages
+    const messageId = msg.message_id; 
     const data = callbackQuery.data;
     console.log(chatId);
     console.log('bu kllientni chat idsi  ', data);
 
 
-    // Extract the customer chat ID directly from the callback data
     const customerChatId = data.split("_")[1];
     const OrderID = data.split("_")[2]
 
@@ -282,10 +276,9 @@ bot.on("callback_query", async (callbackQuery) => {
     if (data.startsWith("accept_")) {
         bot.sendMessage(chatId, `✅ ${OrderID}  Order accepted!`);
 
-        // ✅ Send message to the customer using their chat ID
+       
         bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
 
-        // ✅ Update the inline keyboard to show "Order Done" button
         bot.editMessageReplyMarkup(
             {
                 inline_keyboard: [
@@ -299,10 +292,8 @@ bot.on("callback_query", async (callbackQuery) => {
     if (data.startsWith("deny_")) {
         bot.sendMessage(chatId, `❌ ${OrderID} Order denied.`);
 
-        // ✅ Notify the customer
         bot.sendMessage(customerChatId, "❌ Your order has been denied.");
 
-        // ✅ Remove inline keyboard
         bot.editMessageReplyMarkup(
             { inline_keyboard: [] },
             { chat_id: chatId, message_id: messageId }
@@ -314,7 +305,6 @@ bot.on("callback_query", async (callbackQuery) => {
         bot.sendMessage(customerChatId, "✅ Your order has been done and will be delivered soon ");
 
 
-        // ✅ Remove "Order Done" button after it's clicked
         bot.editMessageReplyMarkup(
             { inline_keyboard: [] },
             { chat_id: chatId, message_id: messageId }
