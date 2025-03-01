@@ -175,7 +175,7 @@ app.post("/web-data", async (req, res) => {
         const TotalPrice = data.orderID.price
 
 
-        let message = `📝 ${orderID} Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
+        let message = `📝  #${orderID} Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
         // ✅ Check if `coordinates` exist and are in correct format
         if (user.deliveryType === "delivery" && user.coordinates) {
