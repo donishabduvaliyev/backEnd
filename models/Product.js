@@ -10,7 +10,8 @@ const itemSchema = new Schema({
     toppings: [{
         name: String,
         price: Number
-    }]
+    }],
+    size: Number
 }, { _id: false }); 
 
 
