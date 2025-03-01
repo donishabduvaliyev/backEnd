@@ -156,6 +156,10 @@ const OWNER_CHAT_IDS = process.env.OWNER_CHAT_IDS.split(",").map(id => id.trim()
 
 const userOrders = new Map();
 
+app.use(express.json()); // ✅ Ensures JSON request body is parsed
+app.use(express.urlencoded({ extended: true })); // ✅ Parses URL-encoded data
+
+
 app.post("/web-data", async (req, res) => {
     try {
         const data = req.body;
