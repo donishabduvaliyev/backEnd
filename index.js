@@ -153,7 +153,7 @@ bot.on("message", (msg) => {
 
 const OWNER_CHAT_IDS = process.env.OWNER_CHAT_IDS.split(",").map(id => id.trim());
 
-const userOrders = new Map(); 
+const userOrders = new Map();
 
 app.post("/web-data", async (req, res) => {
     try {
@@ -173,52 +173,72 @@ app.post("/web-data", async (req, res) => {
         let message = `📝  #${orderID} Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
         // ✅ Check if `coordinates` exist and are in correct format
+        // if (user.deliveryType === "delivery" && user.coordinates) {
+        //     let latitude, longitude;
+
+        //     if (Array.isArray(user.coordinates) && user.coordinates.length === 2) {
+        //         // Case 1: If coordinates are an array: [latitude, longitude]
+        //         [latitude, longitude] = user.coordinates;
+        //     } else if (typeof user.coordinates === "string" && user.coordinates.includes(",")) {
+        //         // Case 2: If coordinates are a string: "latitude,longitude"
+        //         [latitude, longitude] = user.coordinates.split(",");
+        //     } else {
+        //         console.error("❌ Invalid coordinates format:", user.coordinates);
+        //         latitude = longitude = null;
+        //     }
+
+        //     if (latitude && longitude) {
+        //         const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        //         message += `\n📌 Manzil: ${user.location}`;
+        //         message += `\n📍 [📍 Xaritadan ko'rish](${mapsLink})`;  // Clickable link
+        //     } else {
+        //         message += `\n📌 Manzil: ${user.location} (Invalid coordinates)`;
+        //     }
+        // }
+
+
+        // message += `\n🛒 Buyurtma:\n`;
+
+        // cart.forEach((item, index) => {
+        //     message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
+        //     message += `${item.toppings.map((topping, index) => {
+        //         index, topping
+        //     })}`
+
+        // });
+
+
+        // if (user.comment) {
+        //     message += `💬 Kommentariya: ${user.comment}`;
+        // }
+
+
+
+
+
+        // message += `Jami narx: ${TotalPrice
+        //     } `
+
+
         if (user.deliveryType === "delivery" && user.coordinates) {
-            let latitude, longitude;
-
-            if (Array.isArray(user.coordinates) && user.coordinates.length === 2) {
-                // Case 1: If coordinates are an array: [latitude, longitude]
-                [latitude, longitude] = user.coordinates;
-            } else if (typeof user.coordinates === "string" && user.coordinates.includes(",")) {
-                // Case 2: If coordinates are a string: "latitude,longitude"
-                [latitude, longitude] = user.coordinates.split(",");
-            } else {
-                console.error("❌ Invalid coordinates format:", user.coordinates);
-                latitude = longitude = null;
-            }
-
-            if (latitude && longitude) {
-                const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                message += `\n📌 Manzil: ${user.location}`;
-                message += `\n📍 [📍 Xaritadan ko'rish](${mapsLink})`;  // Clickable link
-            } else {
-                message += `\n📌 Manzil: ${user.location} (Invalid coordinates)`;
-            }
+            const [latitude, longitude] = user.coordinates.split(",");
+            const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            message += `\n📌 Address: ${user.location}\n📍 [View on Map](${mapsLink})`;
         }
 
-
-        message += `\n🛒 Buyurtma:\n`;
-
+        message += "\n🛒 Order Items:\n";
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
-            message += `${item.toppings.map((topping , index)=>{
-            index , topping
-            })}`
-
+            if (item.toppings.length) {
+                message += `   Toppings: ${item.toppings.join(", ")}\n`;
+            }
         });
 
-
         if (user.comment) {
-            message += `💬 Kommentariya: ${user.comment}`;
+            message += `💬 Comment: ${user.comment}\n`;
         }
 
-
-
-
-
-        message += `Jami narx: ${TotalPrice
-            } `
-
+        message += `\n💰 Total Price: ${TotalPrice}₽`;
 
 
 
@@ -262,57 +282,39 @@ app.post("/web-data", async (req, res) => {
 bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
-    const messageId = msg.message_id; 
-    const data = callbackQuery.data;
-    console.log(chatId);
-    console.log('bu kllientni chat idsi  ', data);
-
-
-    const customerChatId = data.split("_")[1];
-    const OrderID = data.split("_")[2]
+    const messageId = msg.message_id;
+    const [action, customerChatId, orderID] = callbackQuery.data.split("_");
 
     if (!customerChatId) {
-        console.error("❌ Customer chat ID missing in callback data:", data);
+        console.error("❌ Customer chat ID missing:", callbackQuery.data);
         return;
     }
 
-    if (data.startsWith("accept_")) {
-        bot.sendMessage(chatId, `✅ ${OrderID}  Order accepted!`);
+    try {
+        switch (action) {
+            case "accept":
+                await bot.sendMessage(chatId, `✅ Order ${orderID} accepted!`);
+                await bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
+                await bot.editMessageReplyMarkup(
+                    { inline_keyboard: [[{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${orderID}` }]] },
+                    { chat_id: chatId, message_id: messageId }
+                );
+                break;
 
-       
-        bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
+            case "deny":
+                await bot.sendMessage(chatId, `❌ Order ${orderID} denied.`);
+                await bot.sendMessage(customerChatId, "❌ Your order has been denied.");
+                await bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
+                break;
 
-        bot.editMessageReplyMarkup(
-            {
-                inline_keyboard: [
-                    [{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${OrderID}` }]
-                ]
-            },
-            { chat_id: chatId, message_id: messageId }
-        );
-    }
-
-    if (data.startsWith("deny_")) {
-        bot.sendMessage(chatId, `❌ ${OrderID} Order denied.`);
-
-        bot.sendMessage(customerChatId, "❌ Your order has been denied.");
-
-        bot.editMessageReplyMarkup(
-            { inline_keyboard: [] },
-            { chat_id: chatId, message_id: messageId }
-        );
-    }
-
-    if (data.startsWith("done_")) {
-const orderIDFromLastQuery =callbackQuery.data.split("_")[2] 
-
-        bot.sendMessage(chatId, `✅ ${orderIDFromLastQuery} Order is marked as done!`);
-        bot.sendMessage(customerChatId, "✅ Your order has been done and will be delivered soon ");
-
-
-        bot.editMessageReplyMarkup(
-            { inline_keyboard: [] },
-            { chat_id: chatId, message_id: messageId }
-        );
+            case "done":
+                await bot.sendMessage(chatId, `✅ Order ${orderID} marked as done!`);
+                await bot.sendMessage(customerChatId, "✅ Your order is completed and will be delivered soon.");
+                await bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
+                break;
+        }
+    } catch (error) {
+        console.error("❌ Error handling callback query:", error);
     }
 });
+
