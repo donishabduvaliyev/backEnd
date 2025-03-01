@@ -322,7 +322,7 @@ const action = data.split("_")[0]
         switch (action) {
             case "accept":
                  bot.sendMessage(chatId, `✅ Order ${OrderID} accepted!`);
-                 bot.sendMessage(customerChatId, "✅ Your order has been accepted!");
+                 bot.sendMessage(customerChatId, "✅ Sizning buyurtmangiz qabul qilindi!");
                  bot.editMessageReplyMarkup(
                     { inline_keyboard: [[{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${OrderID}` }]] },
                     { chat_id: chatId, message_id: messageId }
@@ -331,13 +331,13 @@ const action = data.split("_")[0]
 
             case "deny":
                  bot.sendMessage(chatId, `❌ Order ${OrderID} denied.`);
-                 bot.sendMessage(customerChatId, "❌ Your order has been denied.");
+                 bot.sendMessage(customerChatId, "❌ Sizning buyurtmangizzni qabul qilmaymiz.");
                  bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
 
             case "done":
                  bot.sendMessage(chatId, `✅ Order ${OrderID} marked as done!`);
-                 bot.sendMessage(customerChatId, "✅ Your order is completed and will be delivered soon.");
+                 bot.sendMessage(customerChatId, "✅ Sizning buyurtmangiz tayyor va tez orada yetkaziladi");
                  bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
         }
