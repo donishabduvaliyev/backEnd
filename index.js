@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 
 
 const allowedOrigins = [
-    "http://localhost:5173",
+    "http://localhost:5174",
     "https://test-web-site-template.netlify.app",
     "https://web.telegram.org"
 ];
