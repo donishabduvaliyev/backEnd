@@ -13,7 +13,7 @@ dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
-const router = express.Router();
+// const router = express.Router();
 
 const SECRET_KEY = process.env.SECRET_KEY
 
@@ -410,7 +410,7 @@ const sendMessage = async (chatId, title, message, imageUrl) => {
  * @route POST /send-broadcast
  * @desc Send broadcast message to all users
  */
-router.post("/send-broadcast", async (req, res) => {
+app.post("/send-broadcast", async (req, res) => {
     try {
         const { title, message, imageUrl, secretKey } = req.body;
 
