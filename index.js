@@ -123,9 +123,11 @@ bot.on("contact", async (msg) => {
         // Save user to MongoDB
         await botUser.findOneAndUpdate(
             { chatId },
-            { username, phone: phoneNumber },
+            { $set: { username, phone: phoneNumber } },  // ✅ Use $set to update fields properly
             { upsert: true, new: true }
         );
+
+
 
         bot.sendMessage(chatId, "✅ Registration successful! Thank you.");
     } catch (error) {
@@ -189,7 +191,7 @@ app.post("/web-data", async (req, res) => {
     try {
         const data = req.body;
         console.log("📩 Received order data from frontend:", data);
-      
+
 
 
         const user = data.user;
@@ -276,7 +278,7 @@ app.post("/web-data", async (req, res) => {
         message += "\n🛒 Order Items:\n";
         cart.forEach((item, index) => {
             message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n , ${item.size}sm`;
-           
+
             if (Array.isArray(item.topping) && item.topping.length > 0) {
                 message += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
             }
