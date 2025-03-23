@@ -7,12 +7,14 @@ import Product from "./models/Product.js";
 import TelegramBot from "node-telegram-bot-api";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { log } from "console";
+import botUser from "./models/botUser.js";
 
 dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
 
+const SECRET_KEY = process.env.SECRET_KEY
 
 
 const allowedOrigins = [
@@ -89,25 +91,47 @@ app.post("/webhook", (req, res) => {
     res.sendStatus(200);
 });
 
-bot.onText(/\/start/, (msg) => {
+bot.onText(/\/start/, async (msg) => {
+    const chatId = String(msg.chat.id);
+    const username = msg.chat.username || "Unknown";
 
-    bot.sendMessage(msg.chat.id, "Hello! Welcome to the bot.");
+    // Check if user already exists
+    const existingUser = await botUser.findOne({ chatId });
 
+    if (existingUser) {
+        bot.sendMessage(chatId, "✅ You are already registered!");
+        return;
+    }
+
+    // Ask for phone number
+    bot.sendMessage(chatId, "📲 Please share your phone number to register.", {
+        reply_markup: {
+            keyboard: [[{ text: "Share Phone Number 📞", request_contact: true }]],
+            one_time_keyboard: true,
+        },
+    });
 });
 
 
-bot.on("callback_query", (msg) => {
-    if (msg.data === "share_contact") {
-        bot.sendMessage(msg.message.chat.id, "Please share your contact:", {
-            reply_markup: {
-                keyboard: [[{ text: "📱 Share Contact", request_contact: true }]],
-                one_time_keyboard: true,
-                resize_keyboard: true
-            }
-        });
+bot.on("contact", async (msg) => {
+    const chatId = String(msg.chat.id);
+    const username = msg.chat.username || "Unknown";
+    const phoneNumber = msg.contact.phone_number;
+
+    try {
+        // Save user to MongoDB
+        await botUser.findOneAndUpdate(
+            { chatId },
+            { username, phone: phoneNumber },
+            { upsert: true, new: true }
+        );
+
+        bot.sendMessage(chatId, "✅ Registration successful! Thank you.");
+    } catch (error) {
+        console.error("❌ Error saving user:", error);
+        bot.sendMessage(chatId, "❌ An error occurred. Please try again.");
     }
 });
-
 
 const CONTACTS_FILE = "./contacts.json";
 let userContacts = new Map();
@@ -352,3 +376,70 @@ bot.on("callback_query", async (callbackQuery) => {
     }
 });
 
+
+
+
+const sendMessage = async (chatId, title, message, imageUrl) => {
+    try {
+        // Sending text message
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            chat_id: chatId,
+            text: `📢 *${title}*\n\n${message}`,
+            parse_mode: "Markdown",
+        });
+
+        // Sending image if provided
+        if (imageUrl) {
+            await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+                chat_id: chatId,
+                photo: imageUrl,
+                caption: `📢 *${title}*\n\n${message}`,
+                parse_mode: "Markdown",
+            });
+        }
+
+        return true;
+    } catch (error) {
+        console.error(`❌ Failed to send message to ${chatId}:`, error.response?.data || error.message);
+        return false;
+    }
+};
+
+/**
+ * @route POST /send-broadcast
+ * @desc Send broadcast message to all users
+ */
+router.post("/send-broadcast", async (req, res) => {
+    try {
+        const { title, message, imageUrl, secretKey } = req.body;
+
+        // ✅ Security Check
+        if (secretKey !== SECRET_KEY) {
+            return res.status(403).json({ message: "❌ Unauthorized request" });
+        }
+
+        // ✅ Validate Inputs
+        if (!title || !message) {
+            return res.status(400).json({ message: "❌ Title and message are required!" });
+        }
+
+        // ✅ Fetch all bot users from the database
+        const users = await botUser.find({}, "chatId");
+        if (!users.length) {
+            return res.status(404).json({ message: "❌ No users found to send broadcast!" });
+        }
+
+        // ✅ Send messages to each user
+        let successCount = 0;
+        for (const user of users) {
+            const success = await sendMessage(user.chatId, title, message, imageUrl);
+            if (success) successCount++;
+        }
+
+        res.json({ message: `✅ Broadcast sent to ${successCount} users!` });
+
+    } catch (error) {
+        console.error("❌ Broadcast Error:", error);
+        res.status(500).json({ message: "❌ Failed to send broadcast", error: error.message });
+    }
+});
