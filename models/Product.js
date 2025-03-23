@@ -11,7 +11,7 @@ const itemSchema = new Schema({
         name: String,
         price: Number
     }],
-    size: Number
+    sizes: Number
 }, { _id: false }); 
 
 

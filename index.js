@@ -13,6 +13,7 @@ dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
+const router = express.Router();
 
 const SECRET_KEY = process.env.SECRET_KEY
 
