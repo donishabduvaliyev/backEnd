@@ -97,20 +97,31 @@ bot.onText(/\/start/, async (msg) => {
 
     // Check if user already exists
     const existingUser = await botUser.findOne({ chatId });
-
-    if (existingUser) {
-        bot.sendMessage(chatId, "✅ You are already registered!");
+    const botActive = await isBotWorking();
+    if (!botActive) {
+        bot.sendMessage(msg.chat.id, "❌Restuarant hozir ishlamayapti , keyinroq urunib ko'ring");
         return;
+    } else {
+        if (existingUser) {
+            bot.sendMessage(chatId, "✅ Siz ro'yxatdan o'tdingiz");
+            return;
+        }
+
+        // Ask for phone number
+        bot.sendMessage(chatId, "📲 Please share your phone number to register.", {
+            reply_markup: {
+                keyboard: [[{ text: "Share Phone Number 📞", request_contact: true }]],
+                one_time_keyboard: true,
+            },
+        });
     }
 
-    // Ask for phone number
-    bot.sendMessage(chatId, "📲 Please share your phone number to register.", {
-        reply_markup: {
-            keyboard: [[{ text: "Share Phone Number 📞", request_contact: true }]],
-            one_time_keyboard: true,
-        },
-    });
+
+
+
 });
+
+
 
 
 bot.on("contact", async (msg) => {
@@ -131,7 +142,7 @@ bot.on("contact", async (msg) => {
         bot.sendMessage(chatId, "✅ Registration successful! Thank you.");
     } catch (error) {
         console.error("❌ Error saving user:", error);
-        bot.sendMessage(chatId, "❌ An error occurred. Please try again.");
+        // bot.sendMessage(chatId, "❌ An error occurred. Please try again.");
     }
 });
 
@@ -164,7 +175,15 @@ bot.on("contact", (msg) => {
 });
 
 
-bot.on("message", (msg) => {
+bot.on("message", async (msg) => {
+    const chatId = msg.chat.id;
+    const botActive = await isBotWorking();
+    if (!botActive) {
+        bot.sendMessage(chatId, "❌ Bot hozir ishlamayapti. Iltimos, ish vaqtida qayta urinib ko'ring.");
+        return;
+    }
+
+
     try {
         if (msg.web_app_data) {
             console.log("📩 Web App Data Received: asosiy", JSON.stringify(msg.web_app_data, null, 2));
@@ -175,6 +194,7 @@ bot.on("message", (msg) => {
         console.error("❌ Error in message handler:", error);
     }
 });
+
 
 
 
@@ -409,11 +429,6 @@ const sendMessage = async (chatId, title, message, imageUrl) => {
 
 
 
-// app.post("/send-broadcast", async (req, res) => {
-//     console.log("📢 Received Broadcast Request:", req.body);
-//     res.json({ message: "✅ Broadcast received!" });
-// });
-
 
 
 /**
@@ -455,3 +470,54 @@ app.post("/send-broadcast", async (req, res) => {
         res.status(500).json({ message: "❌ Failed to send broadcast", error: error.message });
     }
 });
+
+
+
+
+import botScheduleModel from "./models/botModel.js";
+
+async function isBotWorking() {
+    try {
+        const scheduleData = await botScheduleModel.findOne();
+        if (!scheduleData) {
+            console.error("⚠️ No schedule found in DB.");
+            return false;
+        }
+
+        if (scheduleData.isEmergencyOff) {
+            console.log("⚠️ Emergency mode is ON. Bot is disabled.");
+            return false;
+        }
+
+        const now = new Date();
+        const dayNames = [
+            "Yakshanba", // Sunday
+            "Dushanba",  // Monday
+            "Seshanba",  // Tuesday
+            "Chorshanba", // Wednesday
+            "Payshanba", // Thursday
+            "Juma",      // Friday
+            "Shanba"     // Saturday
+        ];
+
+        const dayOfWeek = dayNames[now.getDay()];
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+
+        const todaySchedule = scheduleData.schedule[dayOfWeek];
+
+        if (!todaySchedule) {
+            console.log(`⚠️ No schedule found for ${dayOfWeek}.`);
+            return false; // Bot is off if no schedule is set
+        }
+
+        const startMinutes = todaySchedule.startHour * 60;
+        const endMinutes = todaySchedule.endHour * 60;
+
+        return currentTime >= startMinutes && currentTime <= endMinutes;
+    } catch (error) {
+        console.error("❌ Error checking bot schedule:", error);
+        return false;
+    }
+}
+
+
