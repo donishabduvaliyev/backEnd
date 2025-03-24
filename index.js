@@ -21,7 +21,8 @@ const SECRET_KEY = process.env.SECRET_KEY
 const allowedOrigins = [
     "http://localhost:5174",
     "https://test-web-site-template.netlify.app",
-    "https://web.telegram.org"
+    "https://web.telegram.org" ,
+    "https://localhost:5000"
 ];
 
 app.use(cors({
