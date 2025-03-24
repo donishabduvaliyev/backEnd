@@ -8,6 +8,7 @@ import TelegramBot from "node-telegram-bot-api";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { log } from "console";
 import botUser from "./models/botUser.js";
+import axios from "axios"; 
 
 dotenv.config();
 
@@ -108,9 +109,9 @@ bot.onText(/\/start/, async (msg) => {
         }
 
         // Ask for phone number
-        bot.sendMessage(chatId, "📲 Please share your phone number to register.", {
+        bot.sendMessage(chatId, "📲 Iltimos telefon raqamingizni ulashing", {
             reply_markup: {
-                keyboard: [[{ text: "Share Phone Number 📞", request_contact: true }]],
+                keyboard: [[{ text: "Raqamni ulashish 📞", request_contact: true }]],
                 one_time_keyboard: true,
             },
         });
@@ -139,7 +140,7 @@ bot.on("contact", async (msg) => {
 
 
 
-        bot.sendMessage(chatId, "✅ Registration successful! Thank you.");
+        bot.sendMessage(chatId, "✅ Siz ro'yhatdan muvaffaqqiyatli o'tdingiz");
     } catch (error) {
         console.error("❌ Error saving user:", error);
         // bot.sendMessage(chatId, "❌ An error occurred. Please try again.");
@@ -168,9 +169,9 @@ bot.on("contact", (msg) => {
             console.error("❌ Failed to save contact:", error);
         }
 
-        bot.sendMessage(msg.chat.id, `✅ Phone number saved: ${msg.contact.phone_number}`);
+        bot.sendMessage(msg.chat.id, `✅ Raqamingiz saqlandi: ${msg.contact.phone_number}`);
     } else {
-        bot.sendMessage(msg.chat.id, "❌ No phone number found.");
+        bot.sendMessage(msg.chat.id, "❌ Raqam topilmadi.");
     }
 });
 
@@ -179,7 +180,7 @@ bot.on("message", async (msg) => {
     const chatId = msg.chat.id;
     const botActive = await isBotWorking();
     if (!botActive) {
-        bot.sendMessage(chatId, "❌ Bot hozir ishlamayapti. Iltimos, ish vaqtida qayta urinib ko'ring.");
+        bot.sendMessage(chatId, "❌ Restuarant hozir ishlamayapti. Iltimos, ish vaqtida qayta urinib ko'ring.");
         return;
     }
 
@@ -507,7 +508,7 @@ async function isBotWorking() {
 
         if (!todaySchedule) {
             console.log(`⚠️ No schedule found for ${dayOfWeek}.`);
-            return false; // Bot is off if no schedule is set
+            return false; 
         }
 
         const startMinutes = todaySchedule.startHour * 60;
