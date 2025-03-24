@@ -6,24 +6,37 @@ import connectDB from "./config.js";
 import Product from "./models/Product.js";
 import TelegramBot from "node-telegram-bot-api";
 import { existsSync, readFileSync, writeFileSync } from "fs";
-import { log } from "console";
 import botUser from "./models/botUser.js";
-import axios from "axios"; 
-
+import axios from "axios";
+import botScheduleModel from "./models/botModel.js";
 dotenv.config();
 
+
+
+const CONTACTS_FILE = "./contacts.json";
 const app = express();
-app.use(bodyParser.json());
-// const router = express.Router();
-
-
 const allowedOrigins = [
     "http://localhost:5174",
     "https://test-web-site-template.netlify.app",
     "https://web.telegram.org",
     "https://localhost:5000"
 ];
+const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const bot = new TelegramBot(TOKEN, {
+    polling: {
+        interval: 300,
+        autoStart: true,
+    },
+});
+let userContacts = new Map();
+const OWNER_CHAT_IDS = process.env.OWNER_CHAT_IDS.split(",").map(id => id.trim());
+const userOrders = new Map();
 
+
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin) || origin.includes("web.telegram.org")) {
@@ -56,37 +69,119 @@ app.get("/api/products", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+app.post("/web-data", async (req, res) => {
+    try {
+        const data = req.body;
+        console.log("📩 Received order data from frontend:", data);
+        const user = data.user;
+        const cart = data.cart;
+        const userChatIDfromWEB = user.userID
+        const orderID = data.orderID.id
+        const TotalPrice = data.orderID.price
+        let message = `📝  #${orderID} Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
 
 
-const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+        if (user.deliveryType === "delivery" && user.coordinates) {
+            let latitude, longitude;
+
+            if (Array.isArray(user.coordinates) && user.coordinates.length === 2) {
+
+                [latitude, longitude] = user.coordinates;
+            } else if (typeof user.coordinates === "string" && user.coordinates.includes(",")) {
+
+                [latitude, longitude] = user.coordinates.split(",");
+            } else {
+                console.error("❌ Invalid coordinates format:", user.coordinates);
+                latitude = longitude = null;
+            }
+
+            if (latitude && longitude) {
+                const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                message += `\n📌 Manzil: ${user.location}`;
+                message += `\n📍 [📍 Xaritadan ko'rish](${mapsLink})`;
+            } else {
+                message += `\n📌 Manzil: ${user.location} (Invalid coordinates)`;
+            }
+        }
+
+        message += "\n🛒 Order Items:\n";
+        cart.forEach((item, index) => {
+            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n , ${item.size.name}sm`;
+
+            if (Array.isArray(item.topping) && item.topping.length > 0) {
+                message += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
+            }
+
+        });
+        if (user.comment) {
+            message += `💬 Comment: ${user.comment}\n`;
+        }
+        message += `\n💰 Total Price: ${TotalPrice}₽`;
+        OWNER_CHAT_IDS.forEach(chatID => {
+            bot.sendMessage(chatID, `new order from client , ${message} `,
+                {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}_${orderID}` }],
+                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB}_${orderID} ` }]
+                        ]
+                    }
+                }
+            )
+        })
+        res.json({ success: true, message: "✅ Order received and sent to Telegram bot." });
+    } catch (error) {
+        console.error("❌ Error processing order:", error);
+        res.status(500).json({ error: "❌ Internal server error." });
+    }
+});
+app.post("/send-broadcast", async (req, res) => {
+    try {
+        const { title, message, imageUrl, secretKey } = req.body;
+        if (req.body.secretKey !== process.env.SECRET_KEY) {
+            return res.status(403).json({ message: "❌ Unauthorized request!" });
+        }
+
+        if (!title || !message) {
+            return res.status(400).json({ message: "❌ Title and message are required!" });
+        }
+        const users = await botUser.find({}, "chatId");
+        if (!users.length) {
+            return res.status(404).json({ message: "❌ No users found to send broadcast!" });
+        }
+        let successCount = 0;
+        for (const user of users) {
+            const success = await sendMessage(user.chatId, title, message, imageUrl);
+            if (success) successCount++;
+        }
+        res.json({ message: `✅ Broadcast sent to ${successCount} users!` });
+
+    } catch (error) {
+        console.error("❌ Broadcast Error:", error);
+        res.status(500).json({ message: "❌ Failed to send broadcast", error: error.message });
+    }
+});
+
+
 if (!TOKEN) {
     console.error("❌ Telegram Bot Token is missing in environment variables.");
     process.exit(1);
 }
 
-const bot = new TelegramBot(TOKEN, {
-    polling: {
-        interval: 300,
-        autoStart: true,
-    },
-});
+
 
 const deleteWebhook = async () => {
     try {
         const response = await fetch(`https://api.telegram.org/bot${TOKEN}/deleteWebhook`);
-        // console.log("✅ Webhook deleted:", await response.json());
+        console.log(response);
     } catch (error) {
         console.error("❌ Error deleting webhook:", error);
     }
 };
-
 (async () => {
     await deleteWebhook();
 })();
-
 bot.setWebHook(`https://backend-xzwz.onrender.com/webhook`);
-
-
 app.post("/webhook", (req, res) => {
     bot.processUpdate(req.body);
     res.sendStatus(200);
@@ -95,8 +190,6 @@ app.post("/webhook", (req, res) => {
 bot.onText(/\/start/, async (msg) => {
     const chatId = String(msg.chat.id);
     const username = msg.chat.username || "Unknown";
-
-    // Check if user already exists
     const existingUser = await botUser.findOne({ chatId });
     const botActive = await isBotWorking();
     if (!botActive) {
@@ -107,8 +200,6 @@ bot.onText(/\/start/, async (msg) => {
             bot.sendMessage(chatId, "✅ Siz ro'yxatdan o'tdingiz");
             return;
         }
-
-        // Ask for phone number
         bot.sendMessage(chatId, "📲 Iltimos telefon raqamingizni ulashing", {
             reply_markup: {
                 keyboard: [[{ text: "Raqamni ulashish 📞", request_contact: true }]],
@@ -116,39 +207,26 @@ bot.onText(/\/start/, async (msg) => {
             },
         });
     }
-
-
-
-
 });
-
-
-
-
 bot.on("contact", async (msg) => {
     const chatId = String(msg.chat.id);
     const username = msg.chat.username || "Unknown";
     const phoneNumber = msg.contact.phone_number;
 
     try {
-        // Save user to MongoDB
         await botUser.findOneAndUpdate(
             { chatId },
-            { $set: { username, phone: phoneNumber } },  // ✅ Use $set to update fields properly
+            { $set: { username, phone: phoneNumber } },
             { upsert: true, new: true }
         );
 
 
 
-        bot.sendMessage(chatId, "✅ Siz ro'yhatdan muvaffaqqiyatli o'tdingiz");
+        bot.sendMessage(chatId, "✅ Siz ro'yhatdan o'tib bo'lgansiz");
     } catch (error) {
         console.error("❌ Error saving user:", error);
-        // bot.sendMessage(chatId, "❌ An error occurred. Please try again.");
     }
 });
-
-const CONTACTS_FILE = "./contacts.json";
-let userContacts = new Map();
 
 if (existsSync(CONTACTS_FILE)) {
     const data = readFileSync(CONTACTS_FILE, "utf8");
@@ -164,11 +242,9 @@ bot.on("contact", (msg) => {
 
         try {
             writeFileSync(CONTACTS_FILE, JSON.stringify(Object.fromEntries(userContacts)));
-            // console.log(`✅ Saved Contact: ${chatId} => ${msg.contact.phone_number}`);
         } catch (error) {
             console.error("❌ Failed to save contact:", error);
         }
-
         bot.sendMessage(msg.chat.id, `✅ Raqamingiz saqlandi: ${msg.contact.phone_number}`);
     } else {
         bot.sendMessage(msg.chat.id, "❌ Raqam topilmadi.");
@@ -183,8 +259,6 @@ bot.on("message", async (msg) => {
         bot.sendMessage(chatId, "❌ Restuarant hozir ishlamayapti. Iltimos, ish vaqtida qayta urinib ko'ring.");
         return;
     }
-
-
     try {
         if (msg.web_app_data) {
             console.log("📩 Web App Data Received: asosiy", JSON.stringify(msg.web_app_data, null, 2));
@@ -197,170 +271,12 @@ bot.on("message", async (msg) => {
 });
 
 
-
-
-const OWNER_CHAT_IDS = process.env.OWNER_CHAT_IDS.split(",").map(id => id.trim());
-
-const userOrders = new Map();
-
-app.use(express.json()); // ✅ Ensures JSON request body is parsed
-app.use(express.urlencoded({ extended: true })); // ✅ Parses URL-encoded data
-
-
-app.post("/web-data", async (req, res) => {
-    try {
-        const data = req.body;
-        console.log("📩 Received order data from frontend:", data);
-
-
-
-        const user = data.user;
-        const cart = data.cart;
-        // console.log(user.userID.chatID);
-        const userChatIDfromWEB = user.userID
-        const orderID = data.orderID.id
-        const TotalPrice = data.orderID.price
-
-
-        let message = `📝  #${orderID} Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
-
-        // ✅ Check if `coordinates` exist and are in correct format
-        // if (user.deliveryType === "delivery" && user.coordinates) {
-        //     let latitude, longitude;
-
-        //     if (Array.isArray(user.coordinates) && user.coordinates.length === 2) {
-        //         // Case 1: If coordinates are an array: [latitude, longitude]
-        //         [latitude, longitude] = user.coordinates;
-        //     } else if (typeof user.coordinates === "string" && user.coordinates.includes(",")) {
-        //         // Case 2: If coordinates are a string: "latitude,longitude"
-        //         [latitude, longitude] = user.coordinates.split(",");
-        //     } else {
-        //         console.error("❌ Invalid coordinates format:", user.coordinates);
-        //         latitude = longitude = null;
-        //     }
-
-        //     if (latitude && longitude) {
-        //         const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-        //         message += `\n📌 Manzil: ${user.location}`;
-        //         message += `\n📍 [📍 Xaritadan ko'rish](${mapsLink})`;  // Clickable link
-        //     } else {
-        //         message += `\n📌 Manzil: ${user.location} (Invalid coordinates)`;
-        //     }
-        // }
-
-
-        // message += `\n🛒 Buyurtma:\n`;
-
-        // cart.forEach((item, index) => {
-        //     message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
-        //     message += `${item.toppings.map((topping, index) => {
-        //         index, topping
-        //     })}`
-
-        // });
-
-
-        // if (user.comment) {
-        //     message += `💬 Kommentariya: ${user.comment}`;
-        // }
-
-
-
-
-
-        // message += `Jami narx: ${TotalPrice
-        //     } `
-
-
-        if (user.deliveryType === "delivery" && user.coordinates) {
-            let latitude, longitude;
-
-            if (Array.isArray(user.coordinates) && user.coordinates.length === 2) {
-                // Case 1: If coordinates are an array: [latitude, longitude]
-                [latitude, longitude] = user.coordinates;
-            } else if (typeof user.coordinates === "string" && user.coordinates.includes(",")) {
-                // Case 2: If coordinates are a string: "latitude,longitude"
-                [latitude, longitude] = user.coordinates.split(",");
-            } else {
-                console.error("❌ Invalid coordinates format:", user.coordinates);
-                latitude = longitude = null;
-            }
-
-            if (latitude && longitude) {
-                const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                message += `\n📌 Manzil: ${user.location}`;
-                message += `\n📍 [📍 Xaritadan ko'rish](${mapsLink})`;  // Clickable link
-            } else {
-                message += `\n📌 Manzil: ${user.location} (Invalid coordinates)`;
-            }
-        }
-
-        message += "\n🛒 Order Items:\n";
-        cart.forEach((item, index) => {
-            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n , ${item.size}sm`;
-
-            if (Array.isArray(item.topping) && item.topping.length > 0) {
-                message += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
-            }
-
-        });
-
-        if (user.comment) {
-            message += `💬 Comment: ${user.comment}\n`;
-        }
-
-        message += `\n💰 Total Price: ${TotalPrice}₽`;
-
-
-
-
-
-
-
-        OWNER_CHAT_IDS.forEach(chatID => {
-            bot.sendMessage(chatID, `new order from client , ${message} `,
-                {
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}_${orderID}` }],
-                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB}_${orderID} ` }]
-                        ]
-                    }
-                }
-            )
-        })
-
-
-
-
-
-
-
-
-        res.json({ success: true, message: "✅ Order received and sent to Telegram bot." });
-
-    } catch (error) {
-        console.error("❌ Error processing order:", error);
-        res.status(500).json({ error: "❌ Internal server error." });
-    }
-});
-
-
-
-
-
-
 bot.on("callback_query", async (callbackQuery) => {
     const msg = callbackQuery.message;
     const chatId = msg.chat.id;
     const messageId = msg.message_id;
     const data = callbackQuery.data
-
     const action = data.split("_")[0]
-
-
-
-
     const customerChatId = callbackQuery.data.split("_")[1];
     const OrderID = callbackQuery.data.split("_")[2]
 
@@ -368,9 +284,6 @@ bot.on("callback_query", async (callbackQuery) => {
         console.error("❌ Customer chat ID missing:", callbackQuery.data);
         return;
     }
-
-
-
     try {
         switch (action) {
             case "accept":
@@ -399,19 +312,13 @@ bot.on("callback_query", async (callbackQuery) => {
     }
 });
 
-
-
-
 const sendMessage = async (chatId, title, message, imageUrl) => {
     try {
-        // Sending text message
         await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: chatId,
             text: `📢 *${title}*\n\n${message}`,
             parse_mode: "Markdown",
         });
-
-        // Sending image if provided
         if (imageUrl) {
             await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
                 chat_id: chatId,
@@ -420,76 +327,15 @@ const sendMessage = async (chatId, title, message, imageUrl) => {
                 parse_mode: "Markdown",
             });
         }
-
         return true;
     } catch (error) {
         console.error(`❌ Failed to send message to ${chatId}:`, error.response?.data || error.message);
         return false;
     }
 };
-
-
-
-
-
-/**
- * @route POST /send-broadcast
- * @desc Send broadcast message to all users
- */
-app.post("/send-broadcast", async (req, res) => {
-    try {
-        const { title, message, imageUrl, secretKey } = req.body;
-
-        // ✅ Security Check
-        if (req.body.secretKey !== process.env.SECRET_KEY) {
-            return res.status(403).json({ message: "❌ Unauthorized request!" });
-        }
-
-
-        // ✅ Validate Inputs
-        if (!title || !message) {
-            return res.status(400).json({ message: "❌ Title and message are required!" });
-        }
-
-        // ✅ Fetch all bot users from the database
-        const users = await botUser.find({}, "chatId");
-        if (!users.length) {
-            return res.status(404).json({ message: "❌ No users found to send broadcast!" });
-        }
-
-        // ✅ Send messages to each user
-        let successCount = 0;
-        for (const user of users) {
-            const success = await sendMessage(user.chatId, title, message, imageUrl);
-            if (success) successCount++;
-        }
-
-        res.json({ message: `✅ Broadcast sent to ${successCount} users!` });
-
-    } catch (error) {
-        console.error("❌ Broadcast Error:", error);
-        res.status(500).json({ message: "❌ Failed to send broadcast", error: error.message });
-    }
-});
-
-
-
-
-import botScheduleModel from "./models/botModel.js";
-
 async function isBotWorking() {
     try {
         const scheduleData = await botScheduleModel.findOne();
-        if (!scheduleData) {
-            console.error("⚠️ No schedule found in DB.");
-            return false;
-        }
-
-        if (scheduleData.isEmergencyOff) {
-            console.log("⚠️ Emergency mode is ON. Bot is disabled.");
-            return false;
-        }
-
         const now = new Date();
         const dayNames = [
             "Yakshanba", // Sunday
@@ -500,15 +346,22 @@ async function isBotWorking() {
             "Juma",      // Friday
             "Shanba"     // Saturday
         ];
-
         const dayOfWeek = dayNames[now.getDay()];
         const currentTime = now.getHours() * 60 + now.getMinutes();
-
         const todaySchedule = scheduleData.schedule[dayOfWeek];
 
+        if (!scheduleData) {
+            console.error("⚠️ No schedule found in DB.");
+            return false;
+        }
+
+        if (scheduleData.isEmergencyOff) {
+            console.log("⚠️ Emergency mode is ON. Bot is disabled.");
+            return false;
+        }
         if (!todaySchedule) {
             console.log(`⚠️ No schedule found for ${dayOfWeek}.`);
-            return false; 
+            return false;
         }
 
         const startMinutes = todaySchedule.startHour * 60;
