@@ -15,13 +15,11 @@ const app = express();
 app.use(bodyParser.json());
 // const router = express.Router();
 
-const SECRET_KEY = process.env.SECRET_KEY
-
 
 const allowedOrigins = [
     "http://localhost:5174",
     "https://test-web-site-template.netlify.app",
-    "https://web.telegram.org" ,
+    "https://web.telegram.org",
     "https://localhost:5000"
 ];
 
@@ -418,9 +416,10 @@ app.post("/send-broadcast", async (req, res) => {
         const { title, message, imageUrl, secretKey } = req.body;
 
         // ✅ Security Check
-        if (secretKey !== SECRET_KEY) {
-            return res.status(403).json({ message: "❌ Unauthorized request" });
+        if (req.body.secretKey !== process.env.SECRET_KEY) {
+            return res.status(403).json({ message: "❌ Unauthorized request!" });
         }
+
 
         // ✅ Validate Inputs
         if (!title || !message) {
