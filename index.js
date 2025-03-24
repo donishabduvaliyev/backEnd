@@ -405,7 +405,7 @@ bot.on("callback_query", async (callbackQuery) => {
 const sendMessage = async (chatId, title, message, imageUrl) => {
     try {
         // Sending text message
-        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: chatId,
             text: `📢 *${title}*\n\n${message}`,
             parse_mode: "Markdown",
@@ -413,7 +413,7 @@ const sendMessage = async (chatId, title, message, imageUrl) => {
 
         // Sending image if provided
         if (imageUrl) {
-            await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+            await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
                 chat_id: chatId,
                 photo: imageUrl,
                 caption: `📢 *${title}*\n\n${message}`,
