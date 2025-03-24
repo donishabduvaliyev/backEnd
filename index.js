@@ -381,38 +381,38 @@ bot.on("callback_query", async (callbackQuery) => {
 
 
 
-// const sendMessage = async (chatId, title, message, imageUrl) => {
-//     try {
-//         // Sending text message
-//         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-//             chat_id: chatId,
-//             text: `📢 *${title}*\n\n${message}`,
-//             parse_mode: "Markdown",
-//         });
+const sendMessage = async (chatId, title, message, imageUrl) => {
+    try {
+        // Sending text message
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            chat_id: chatId,
+            text: `📢 *${title}*\n\n${message}`,
+            parse_mode: "Markdown",
+        });
 
-//         // Sending image if provided
-//         if (imageUrl) {
-//             await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
-//                 chat_id: chatId,
-//                 photo: imageUrl,
-//                 caption: `📢 *${title}*\n\n${message}`,
-//                 parse_mode: "Markdown",
-//             });
-//         }
+        // Sending image if provided
+        if (imageUrl) {
+            await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+                chat_id: chatId,
+                photo: imageUrl,
+                caption: `📢 *${title}*\n\n${message}`,
+                parse_mode: "Markdown",
+            });
+        }
 
-//         return true;
-//     } catch (error) {
-//         console.error(`❌ Failed to send message to ${chatId}:`, error.response?.data || error.message);
-//         return false;
-//     }
-// };
+        return true;
+    } catch (error) {
+        console.error(`❌ Failed to send message to ${chatId}:`, error.response?.data || error.message);
+        return false;
+    }
+};
 
 
 
-app.post("/send-broadcast", async (req, res) => {
-    console.log("📢 Received Broadcast Request:", req.body);
-    res.json({ message: "✅ Broadcast received!" });
-});
+// app.post("/send-broadcast", async (req, res) => {
+//     console.log("📢 Received Broadcast Request:", req.body);
+//     res.json({ message: "✅ Broadcast received!" });
+// });
 
 
 
@@ -420,38 +420,38 @@ app.post("/send-broadcast", async (req, res) => {
  * @route POST /send-broadcast
  * @desc Send broadcast message to all users
  */
-// app.post("/send-broadcast", async (req, res) => {
-//     try {
-//         const { title, message, imageUrl, secretKey } = req.body;
+app.post("/send-broadcast", async (req, res) => {
+    try {
+        const { title, message, imageUrl, secretKey } = req.body;
 
-//         // ✅ Security Check
-//         if (req.body.secretKey !== process.env.SECRET_KEY) {
-//             return res.status(403).json({ message: "❌ Unauthorized request!" });
-//         }
+        // ✅ Security Check
+        if (req.body.secretKey !== process.env.SECRET_KEY) {
+            return res.status(403).json({ message: "❌ Unauthorized request!" });
+        }
 
 
-//         // ✅ Validate Inputs
-//         if (!title || !message) {
-//             return res.status(400).json({ message: "❌ Title and message are required!" });
-//         }
+        // ✅ Validate Inputs
+        if (!title || !message) {
+            return res.status(400).json({ message: "❌ Title and message are required!" });
+        }
 
-//         // ✅ Fetch all bot users from the database
-//         const users = await botUser.find({}, "chatId");
-//         if (!users.length) {
-//             return res.status(404).json({ message: "❌ No users found to send broadcast!" });
-//         }
+        // ✅ Fetch all bot users from the database
+        const users = await botUser.find({}, "chatId");
+        if (!users.length) {
+            return res.status(404).json({ message: "❌ No users found to send broadcast!" });
+        }
 
-//         // ✅ Send messages to each user
-//         let successCount = 0;
-//         for (const user of users) {
-//             const success = await sendMessage(user.chatId, title, message, imageUrl);
-//             if (success) successCount++;
-//         }
+        // ✅ Send messages to each user
+        let successCount = 0;
+        for (const user of users) {
+            const success = await sendMessage(user.chatId, title, message, imageUrl);
+            if (success) successCount++;
+        }
 
-//         res.json({ message: `✅ Broadcast sent to ${successCount} users!` });
+        res.json({ message: `✅ Broadcast sent to ${successCount} users!` });
 
-//     } catch (error) {
-//         console.error("❌ Broadcast Error:", error);
-//         res.status(500).json({ message: "❌ Failed to send broadcast", error: error.message });
-//     }
-// });
+    } catch (error) {
+        console.error("❌ Broadcast Error:", error);
+        res.status(500).json({ message: "❌ Failed to send broadcast", error: error.message });
+    }
+});
