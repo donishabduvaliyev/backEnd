@@ -346,6 +346,7 @@ bot.on("callback_query", async (callbackQuery) => {
                 bot.sendMessage(adminChatID, `📢 Yangi baho qabul qilindi!  
                     🛒 Buyurtma #${OrderID}  
                     ⭐ Baho: ${rating} yulduz`);
+                break;
 
 
         }
