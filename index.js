@@ -79,63 +79,67 @@ app.post("/web-data", async (req, res) => {
         const orderID = data.orderID.id
         const TotalPrice = data.orderID.price
         let message = `📝  #${orderID} Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
-
-
-        if (user.deliveryType === "delivery" && user.coordinates) {
-            let latitude, longitude;
-
-            if (Array.isArray(user.coordinates) && user.coordinates.length === 2) {
-
-                [latitude, longitude] = user.coordinates;
-            } else if (typeof user.coordinates === "string" && user.coordinates.includes(",")) {
-
-                [latitude, longitude] = user.coordinates.split(",");
-            } else {
-                console.error("❌ Invalid coordinates format:", user.coordinates);
-                latitude = longitude = null;
-            }
-
-            if (latitude && longitude) {
-                const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                message += `\n📌 Manzil: ${user.location}`;
-                message += `\n📍 [📍 Xaritadan ko'rish](${mapsLink})`;
-            } else {
-                message += `\n📌 Manzil: ${user.location} (Invalid coordinates)`;
-            }
+        const botWorking = await isBotWorking()
+        if (!botWorking) {
+            bot.sendMessage(userChatIDfromWEB, "❌ Restuarant hozir ishlamayapti. Iltimos, ish vaqtida qayta urinib ko'ring.")
         }
+        else {
+            if (user.deliveryType === "delivery" && user.coordinates) {
+                let latitude, longitude;
 
-        message += "\n🛒 Order Items:\n";
-        cart.forEach((item, index) => {
-            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n ,`;
+                if (Array.isArray(user.coordinates) && user.coordinates.length === 2) {
 
-            if (item.size?.name) {
-                message += `, ${item.size.name}sm`;
-            }
+                    [latitude, longitude] = user.coordinates;
+                } else if (typeof user.coordinates === "string" && user.coordinates.includes(",")) {
 
-            message += "\n";
-
-            if (Array.isArray(item.topping) && item.topping.length > 0) {
-                message += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
-            }
-
-        });
-        if (user.comment) {
-            message += `💬 Comment: ${user.comment}\n`;
-        }
-        message += `\n💰 Total Price: ${TotalPrice}₽`;
-        OWNER_CHAT_IDS.forEach(chatID => {
-            bot.sendMessage(chatID, `new order from client , ${message} `,
-                {
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}_${orderID}_${user.deliveryType}` }],
-                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB}_${orderID}_${user.deliveryType} ` }]
-                        ]
-                    }
+                    [latitude, longitude] = user.coordinates.split(",");
+                } else {
+                    console.error("❌ Invalid coordinates format:", user.coordinates);
+                    latitude = longitude = null;
                 }
-            )
-        })
-        res.json({ success: true, message: "✅ Order received and sent to Telegram bot." });
+
+                if (latitude && longitude) {
+                    const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                    message += `\n📌 Manzil: ${user.location}`;
+                    message += `\n📍 [📍 Xaritadan ko'rish](${mapsLink})`;
+                } else {
+                    message += `\n📌 Manzil: ${user.location} (Invalid coordinates)`;
+                }
+            }
+
+            message += "\n🛒 Order Items:\n";
+            cart.forEach((item, index) => {
+                message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n ,`;
+
+                if (item.size?.name) {
+                    message += `, ${item.size.name}sm`;
+                }
+
+                message += "\n";
+
+                if (Array.isArray(item.topping) && item.topping.length > 0) {
+                    message += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
+                }
+
+            });
+            if (user.comment) {
+                message += `💬 Comment: ${user.comment}\n`;
+            }
+            message += `\n💰 Total Price: ${TotalPrice}₽`;
+            OWNER_CHAT_IDS.forEach(chatID => {
+                bot.sendMessage(chatID, `new order from client , ${message} `,
+                    {
+                        reply_markup: {
+                            inline_keyboard: [
+                                [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}_${orderID}_${user.deliveryType}` }],
+                                [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB}_${orderID}_${user.deliveryType} ` }]
+                            ]
+                        }
+                    }
+                )
+            })
+            res.json({ success: true, message: "✅ Order received and sent to Telegram bot." });
+        }
     } catch (error) {
         console.error("❌ Error processing order:", error);
         res.status(500).json({ error: "❌ Internal server error." });
