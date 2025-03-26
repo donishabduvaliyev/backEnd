@@ -388,38 +388,42 @@ const sendMessage = async (chatId, title, message, imageUrl) => {
 async function isBotWorking() {
     try {
         const scheduleData = await botScheduleModel.findOne();
-        const now = new Date();
-        const dayNames = [
-            "Yakshanba", // Sunday
-            "Dushanba",  // Monday
-            "Seshanba",  // Tuesday
-            "Chorshanba", // Wednesday
-            "Payshanba", // Thursday
-            "Juma",      // Friday
-            "Shanba"     // Saturday
-        ];
-        const dayOfWeek = dayNames[now.getDay()];
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-        const todaySchedule = scheduleData.schedule[dayOfWeek];
-
         if (!scheduleData) {
             console.error("⚠️ No schedule found in DB.");
             return false;
         }
-
         if (scheduleData.isEmergencyOff) {
             console.log("⚠️ Emergency mode is ON. Bot is disabled.");
             return false;
         }
+        const now = new Date();
+        const dayNames = [
+            "Yakshanba", "Dushanba", "Seshanba", "Chorshanba",
+            "Payshanba", "Juma", "Shanba"
+        ];
+        let dayOfWeek = dayNames[now.getDay()];
+        let currentTime = now.getHours() * 60 + now.getMinutes();
+        let todaySchedule = scheduleData.schedule[dayOfWeek];
         if (!todaySchedule) {
             console.log(`⚠️ No schedule found for ${dayOfWeek}.`);
             return false;
         }
+        let startMinutes = todaySchedule.startHour * 60;
+        let endMinutes = todaySchedule.endHour * 60;
+        if (endMinutes < startMinutes) {
+            let nextDayIndex = (now.getDay() + 1) % 7;
+            let nextDay = dayNames[nextDayIndex];
+            let nextDaySchedule = scheduleData.schedule[nextDay];
 
-        const startMinutes = todaySchedule.startHour * 60;
-        const endMinutes = todaySchedule.endHour * 60;
-
-        return currentTime >= startMinutes && currentTime <= endMinutes;
+            if (currentTime >= startMinutes || currentTime < endMinutes) {
+                return true;
+            }
+        } else {
+            if (currentTime >= startMinutes && currentTime <= endMinutes) {
+                return true;
+            }
+        }
+        return false;
     } catch (error) {
         console.error("❌ Error checking bot schedule:", error);
         return false;
