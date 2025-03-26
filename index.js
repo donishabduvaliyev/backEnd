@@ -355,7 +355,8 @@ bot.on("callback_query", async (query) => {
 
         bot.sendMessage(customerChatId, `🎉 Rahmat! Siz ${rating}⭐ baho berdingiz.`);
 
-        // Send the review to the admin chat(s)
+        bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: customerChatId, message_id: messageId });
+        
         OWNER_CHAT_IDS.forEach(adminChatID => {
             bot.sendMessage(adminChatID, `📢 Yangi baho qabul qilindi!  
 🛒 Buyurtma #${orderId}  
