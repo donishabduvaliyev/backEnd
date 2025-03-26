@@ -22,15 +22,9 @@ const allowedOrigins = [
     "https://localhost:5000"
 ];
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const bot = new TelegramBot(TOKEN, {
-    polling: {
-        interval: 300,
-        autoStart: true,
-    },
-});
+const bot = new TelegramBot(TOKEN);
 let userContacts = new Map();
 const OWNER_CHAT_IDS = process.env.OWNER_CHAT_IDS.split(",").map(id => id.trim());
-const userOrders = new Map();
 
 
 
@@ -49,6 +43,10 @@ app.use(cors({
     allowedHeaders: "Content-Type",
     credentials: true
 }));
+app.use((err, req, res, _next) => {
+    console.error("Unhandled Error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+});
 
 
 connectDB().then(() => {
@@ -69,7 +67,13 @@ app.get("/api/products", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-app.post("/web-data", async (req, res) => {
+
+app.post("/web-data", (req, res, next) => {
+    if (!req.body.cart || !req.body.user) {
+        return res.status(400).json({ error: "Missing cart/user data" });
+    }
+    next();
+}, async (req, res) => {
     try {
         const data = req.body;
         console.log("📩 Received order data from frontend:", data);
@@ -78,12 +82,16 @@ app.post("/web-data", async (req, res) => {
         const userChatIDfromWEB = user.userID
         const orderID = data.orderID.id
         const TotalPrice = data.orderID.price
-        let message = `📝  #${orderID} Order from ${user.name}\n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
+        const sanitize = (text) => text.replace(/[_*[\]()~`>#+=|{}.!-]/g, '\\$&');
         const botWorking = await isBotWorking()
         if (!botWorking) {
             bot.sendMessage(userChatIDfromWEB, "❌ Restuarant hozir ishlamayapti. Iltimos, ish vaqtida qayta urinib ko'ring.")
+            return res.json({ success: false, message: "❌ Restaurant is closed." });
         }
         else {
+
+
+            let message = `📝  #${orderID} Order from ${sanitize(user.name)} \n📞 Phone: ${user.phone}\n📍 Delivery Type: ${user.deliveryType}`;
             if (user.deliveryType === "delivery" && user.coordinates) {
                 let latitude, longitude;
 
@@ -109,7 +117,7 @@ app.post("/web-data", async (req, res) => {
 
             message += "\n🛒 Order Items:\n";
             cart.forEach((item, index) => {
-                message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n ,`;
+                message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n`;
 
                 if (item.size?.name) {
                     message += `, ${item.size.name}sm`;
@@ -118,7 +126,7 @@ app.post("/web-data", async (req, res) => {
                 message += "\n";
 
                 if (Array.isArray(item.topping) && item.topping.length > 0) {
-                    message += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
+                    message += `   🧀 Toppings: ${item.topping.map(topping => topping.name).join(", ")}\n`;
                 }
 
             });
@@ -145,6 +153,8 @@ app.post("/web-data", async (req, res) => {
         res.status(500).json({ error: "❌ Internal server error." });
     }
 });
+
+
 app.post("/send-broadcast", async (req, res) => {
     try {
         const { title, message, imageUrl, secretKey } = req.body;
@@ -164,6 +174,11 @@ app.post("/send-broadcast", async (req, res) => {
             const success = await sendMessage(user.chatId, title, message, imageUrl);
             if (success) successCount++;
         }
+        for (const user of users) {
+            const success = await sendMessage(user.chatId, title, message, imageUrl);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (success) successCount++;
+        }
         res.json({ message: `✅ Broadcast sent to ${successCount} users!` });
 
     } catch (error) {
@@ -175,6 +190,10 @@ app.post("/send-broadcast", async (req, res) => {
 
 if (!TOKEN) {
     console.error("❌ Telegram Bot Token is missing in environment variables.");
+    process.exit(1);
+}
+if (!process.env.OWNER_CHAT_IDS) {
+    console.error("OWNER_CHAT_IDS is required!");
     process.exit(1);
 }
 
