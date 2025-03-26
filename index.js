@@ -326,44 +326,56 @@ bot.on("callback_query", async (callbackQuery) => {
                     reply_markup: {
                         inline_keyboard: [
                             [
-                                { text: "⭐", callback_data: `review_1_${OrderID}_${customerChatId}` },
-                                { text: "⭐⭐", callback_data: `review_2_${OrderID}_${customerChatId}` },
-                                { text: "⭐⭐⭐", callback_data: `review_3_${OrderID}_${customerChatId}` },
-                                { text: "⭐⭐⭐⭐", callback_data: `review_4_${OrderID}_${customerChatId}` },
-                                { text: "⭐⭐⭐⭐⭐", callback_data: `review_5_${OrderID}_${customerChatId}` }
+                                { text: "1⭐", callback_data: `review_1_${OrderID}_${customerChatId}` },
+                                { text: "2⭐", callback_data: `review_2_${OrderID}_${customerChatId}` },
+                                { text: "3⭐", callback_data: `review_3_${OrderID}_${customerChatId}` },
+                                { text: "4⭐", callback_data: `review_4_${OrderID}_${customerChatId}` },
+                                { text: "5⭐", callback_data: `review_5_${OrderID}_${customerChatId}` }
                             ]
                         ]
                     }
                 });
                 bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
+
+            case "review":
+                const parts = data.split("_");
+                const rating = parts[1];
+                bot.sendMessage(customerChatId, `🎉 Rahmat! Siz ${rating}⭐ baho berdingiz.`);
+                bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: customerChatId, message_id: messageId });
+                bot.sendMessage(adminChatID, `📢 Yangi baho qabul qilindi!  
+                    🛒 Buyurtma #${OrderID}  
+                    ⭐ Baho: ${rating} yulduz`);
+
+
         }
+
     } catch (error) {
         console.error("❌ Error handling callback query:", error);
     }
 });
 
-bot.on("callback_query", async (query) => {
-    // const chatId = query.message.chat.id;
-    const data = query.data;
+// bot.on("callback_query", async (query) => {
+//     // const chatId = query.message.chat.id;
+//     const data = query.data;
 
-    if (data.startsWith("review_")) {
-        const parts = data.split("_");
-        const rating = parts[1];
-        const orderId = parts[2];
-        const customerChatId = parts[3];
+//     if (data.startsWith("review_")) {
+//         const parts = data.split("_");
+//         const rating = parts[1];
+//         const orderId = parts[2];
+//         const customerChatId = parts[3];
 
-        bot.sendMessage(customerChatId, `🎉 Rahmat! Siz ${rating}⭐ baho berdingiz.`);
+//         bot.sendMessage(customerChatId, `🎉 Rahmat! Siz ${rating}⭐ baho berdingiz.`);
 
-        bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: customerChatId, message_id: messageId });
-        
-        OWNER_CHAT_IDS.forEach(adminChatID => {
-            bot.sendMessage(adminChatID, `📢 Yangi baho qabul qilindi!  
-🛒 Buyurtma #${orderId}  
-⭐ Baho: ${rating} yulduz`);
-        });
-    }
-});
+//         bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: customerChatId, message_id: messageId });
+
+//         OWNER_CHAT_IDS.forEach(adminChatID => {
+//             bot.sendMessage(adminChatID, `📢 Yangi baho qabul qilindi!  
+// 🛒 Buyurtma #${orderId}  
+// ⭐ Baho: ${rating} yulduz`);
+//         });
+//     }
+// });
 
 
 const sendMessage = async (chatId, title, message, imageUrl) => {
@@ -421,7 +433,7 @@ async function isBotWorking() {
         const startMinutes = todaySchedule.startHour * 60;
         const endMinutes = todaySchedule.endHour * 60;
 
-        return currentTime >= startMinutes && currentTime <= endMinutes;
+        return currentTime <= startMinutes && currentTime >= endMinutes;
     } catch (error) {
         console.error("❌ Error checking bot schedule:", error);
         return false;
