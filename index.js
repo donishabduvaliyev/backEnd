@@ -106,7 +106,13 @@ app.post("/web-data", async (req, res) => {
 
         message += "\n🛒 Order Items:\n";
         cart.forEach((item, index) => {
-            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n , ${item.size.name}sm`;
+            message += `${index + 1}. ${item.name} - ${item.quantity} x ${item.price}₽\n ,`;
+
+            if (item.size?.name) {
+                message += `, ${item.size.name}sm`;
+            }
+
+            message += "\n";
 
             if (Array.isArray(item.topping) && item.topping.length > 0) {
                 message += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
@@ -122,8 +128,8 @@ app.post("/web-data", async (req, res) => {
                 {
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}_${orderID}` }],
-                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB}_${orderID} ` }]
+                            [{ text: "✅ Accept Order", callback_data: `accept_${userChatIDfromWEB}_${orderID}_${user.deliveryType}` }],
+                            [{ text: "❌ Deny Order", callback_data: `deny_${userChatIDfromWEB}_${orderID}_${user.deliveryType} ` }]
                         ]
                     }
                 }
@@ -279,6 +285,7 @@ bot.on("callback_query", async (callbackQuery) => {
     const action = data.split("_")[0]
     const customerChatId = callbackQuery.data.split("_")[1];
     const OrderID = callbackQuery.data.split("_")[2]
+    const DeliveryType = callbackQuery.data.split("_")[3]
 
     if (!customerChatId) {
         console.error("❌ Customer chat ID missing:", callbackQuery.data);
@@ -288,7 +295,7 @@ bot.on("callback_query", async (callbackQuery) => {
         switch (action) {
             case "accept":
                 bot.sendMessage(chatId, `✅ Order ${OrderID} accepted!`);
-                bot.sendMessage(customerChatId, "✅ Sizning buyurtmangiz qabul qilindi!");
+                bot.sendMessage(customerChatId, `✅ Sizning ${OrderID} buyurtmangiz qabul qilindi!`);
                 bot.editMessageReplyMarkup(
                     { inline_keyboard: [[{ text: "✅ Order Done", callback_data: `done_${customerChatId}_${OrderID}` }]] },
                     { chat_id: chatId, message_id: messageId }
@@ -303,7 +310,31 @@ bot.on("callback_query", async (callbackQuery) => {
 
             case "done":
                 bot.sendMessage(chatId, `✅ Order ${OrderID} marked as done!`);
-                bot.sendMessage(customerChatId, "✅ Sizning buyurtmangiz tayyor va tez orada yetkaziladi");
+                bot.sendMessage(customerChatId, `✅ Sizning ${OrderID} buyurtmangiz  yetkazib berishga/olib ketishga tayyor`);
+                bot.editMessageReplyMarkup({ inline_keyboard: [[{ text: "deliver/take Out", callback_data: `deliver_${customerChatId}_${OrderID}_${DeliveryType}` }]] }, { chat_id: chatId, message_id: messageId });
+                break;
+
+            case "deliver":
+                const doneMessage = DeliveryType === "delivery"
+                    ? "✅  yetkazib berildi!"
+                    : "✅  olib ketildi!";
+
+                bot.sendMessage(chatId, `✅ Order ${OrderID} ${doneMessage}`)
+                bot.sendMessage(customerChatId, `✅ Sizning ${OrderID} buyurtmangiz ${doneMessage} `)
+
+                bot.sendMessage(customerChatId, "⭐ Buyurtmangizdan mamnun bo'ldingizmi? Iltimos, baho bering!", {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                { text: "⭐", callback_data: `review_1_${OrderID}_${customerChatId}` },
+                                { text: "⭐⭐", callback_data: `review_2_${OrderID}_${customerChatId}` },
+                                { text: "⭐⭐⭐", callback_data: `review_3_${OrderID}_${customerChatId}` },
+                                { text: "⭐⭐⭐⭐", callback_data: `review_4_${OrderID}_${customerChatId}` },
+                                { text: "⭐⭐⭐⭐⭐", callback_data: `review_5_${OrderID}_${customerChatId}` }
+                            ]
+                        ]
+                    }
+                });
                 bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
                 break;
         }
@@ -311,6 +342,28 @@ bot.on("callback_query", async (callbackQuery) => {
         console.error("❌ Error handling callback query:", error);
     }
 });
+
+bot.on("callback_query", async (query) => {
+    // const chatId = query.message.chat.id;
+    const data = query.data;
+
+    if (data.startsWith("review_")) {
+        const parts = data.split("_");
+        const rating = parts[1];
+        const orderId = parts[2];
+        const customerChatId = parts[3];
+
+        bot.sendMessage(customerChatId, `🎉 Rahmat! Siz ${rating}⭐ baho berdingiz.`);
+
+        // Send the review to the admin chat(s)
+        OWNER_CHAT_IDS.forEach(adminChatID => {
+            bot.sendMessage(adminChatID, `📢 Yangi baho qabul qilindi!  
+🛒 Buyurtma #${orderId}  
+⭐ Baho: ${rating} yulduz`);
+        });
+    }
+});
+
 
 const sendMessage = async (chatId, title, message, imageUrl) => {
     try {
