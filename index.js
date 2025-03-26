@@ -342,8 +342,8 @@ bot.on("callback_query", async (callbackQuery) => {
                 const parts = data.split("_");
                 const rating = parts[1];
                 bot.sendMessage(customerChatId, `🎉 Rahmat! Siz ${rating} baho berdingiz.`);
-                bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: customerChatId, message_id: messageId });
-                bot.sendMessage(chatId, `📢 Yangi baho qabul qilindi!  
+                bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: messageId });
+                bot.sendMessage(OWNER_CHAT_IDS, `📢 Yangi baho qabul qilindi!  
                     🛒 Buyurtma #${OrderID}  
                     ⭐ Baho: ${rating} yulduz`);
                 break;
