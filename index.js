@@ -199,17 +199,17 @@ if (!process.env.OWNER_CHAT_IDS) {
 
 
 
-const deleteWebhook = async () => {
-    try {
-        const response = await fetch(`https://api.telegram.org/bot${TOKEN}/deleteWebhook`);
-        console.log(response);
-    } catch (error) {
-        console.error("❌ Error deleting webhook:", error);
-    }
-};
-(async () => {
-    await deleteWebhook();
-})();
+// const deleteWebhook = async () => {
+//     try {
+//         const response = await fetch(`https://api.telegram.org/bot${TOKEN}/deleteWebhook`);
+//         console.log(response);
+//     } catch (error) {
+//         console.error("❌ Error deleting webhook:", error);
+//     }
+// };
+// (async () => {
+//     await deleteWebhook();
+// })();
 bot.setWebHook(`https://backend-xzwz.onrender.com/webhook`);
 app.post("/webhook", (req, res) => {
     bot.processUpdate(req.body);
