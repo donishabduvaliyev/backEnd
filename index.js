@@ -126,7 +126,7 @@ app.post("/web-data", (req, res, next) => {
                 message += "\n";
 
                 if (Array.isArray(item.topping) && item.topping.length > 0) {
-                    message += `   🧀 Toppings: ${item.topping.map(topping => topping.name).join(", ")}\n`;
+                    message += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
                 }
 
             });
