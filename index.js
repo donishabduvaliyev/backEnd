@@ -382,11 +382,11 @@ bot.on("callback_query", async (callbackQuery) => {
 
 const sendMessage = async (chatId, title, message, imageUrl) => {
     try {
-        await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-            chat_id: chatId,
-            text: `📢 *${title}*\n\n${message}`,
-            parse_mode: "Markdown",
-        });
+        // await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        //     chat_id: chatId,
+        //     text: `📢 *${title}*\n\n${message}`,
+        //     parse_mode: "Markdown",
+        // });
         if (imageUrl) {
             await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
                 chat_id: chatId,
