@@ -170,7 +170,7 @@ app.post("/send-broadcast", async (req, res) => {
             return res.status(404).json({ message: "❌ No users found to send broadcast!" });
         }
         let successCount = 0;
-      
+
         for (const user of users) {
             const success = await sendMessage(user.chatId, title, message, imageUrl);
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -335,9 +335,9 @@ bot.on("callback_query", async (callbackQuery) => {
                 break;
 
             case "deliver":
-                const doneMessage = DeliveryType === "delivery"
-                    ? "✅  yetkazib berildi!"
-                    : "✅  olib ketildi!";
+                const doneMessage = DeliveryType !== "delivery"
+                    ? "olib ketildi!"
+                    : "yetkazib berildi!";
 
                 bot.sendMessage(chatId, `✅ Order ${OrderID} ${doneMessage}`)
                 bot.sendMessage(customerChatId, `✅ Sizning ${OrderID} buyurtmangiz ${doneMessage} `)
