@@ -672,20 +672,3 @@ app.use((err, req, res, next) => {
 // --- Start Server --- (Moved inside connectDB().then())
 // app.listen(BOT_SERVER_PORT, "0.0.0.0", () => console.log(`🚀 Bot Server running on port ${BOT_SERVER_PORT}`));
 
-// Optional: Graceful shutdown handling
-process.on('SIGINT', () => {
-    console.log("ℹ️ SIGINT received. Shutting down gracefully...");
-    mongoose.connection.close(() => {
-        console.log("✅ MongoDB connection closed.");
-        process.exit(0);
-    });
-    // Add server.close() if needed
-});
-process.on('SIGTERM', () => {
-    console.log("ℹ️ SIGTERM received. Shutting down gracefully...");
-    mongoose.connection.close(() => {
-        console.log("✅ MongoDB connection closed.");
-        process.exit(0);
-    });
-    // Add server.close() if needed
-});
