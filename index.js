@@ -79,8 +79,9 @@ const requireApiKeyForBot = (req, res, next) => {
 };
 
 
-// --- Database Connection ---
-connectDB(); // Assuming this connects and handles errors/logs internally
+connectDB().then(() => {
+    app.listen(5000, "0.0.0.0", () => console.log("🚀 Server running on port 5000"));
+});
 
 // --- Telegram Webhook Setup ---
 if (WEBHOOK_URL) {
