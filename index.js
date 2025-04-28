@@ -272,13 +272,14 @@ app.post("/webhook", (req, res) => {
 });
 
 // Get products (if needed by web app directly from bot server)
-app.get("/api/products", async (req, res, next) => {
+app.get("/api/products", async (req, res) => {
     try {
         const products = await Product.find();
+        console.log(`Backend: Found ${products.length} products.`); // Add this line
         res.json(products);
     } catch (error) {
-        console.error("❌ Error fetching products:", error);
-        next(error); // Pass to global error handler
+        console.error("Error fetching products:", error);
+        res.status(500).json({ error: error.message });
     }
 });
 
