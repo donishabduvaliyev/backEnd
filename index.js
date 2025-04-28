@@ -297,12 +297,12 @@ app.post("/web-data", async (req, res, next) => {
 
     try {
         // 2. Check Working Hours
-        const botWorking = await isBotWorking();
-        if (!botWorking) {
-            console.log("❌ /web-data: Restaurant is closed. Order rejected.");
-            bot.sendMessage(user.userID, "❌ Restaurant hozir ishlamayapti. Iltimos, ish vaqtida qayta urinib ko'ring.").catch(err => console.error("Error sending closed message:", err));
-            return res.status(400).json({ success: false, message: "❌ Restaurant is currently closed." });
-        }
+        // const botWorking = await isBotWorking();
+        // if (!botWorking) {
+        //     console.log("❌ /web-data: Restaurant is closed. Order rejected.");
+        //     bot.sendMessage(user.userID, "❌ Restaurant hozir ishlamayapti. Iltimos, ish vaqtida qayta urinib ko'ring.").catch(err => console.error("Error sending closed message:", err));
+        //     return res.status(400).json({ success: false, message: "❌ Restaurant is currently closed." });
+        // }
 
         // 3. Prepare Payload for Admin Server
         const orderPayload = {
