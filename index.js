@@ -158,7 +158,7 @@ async function isBotWorking() {
  * @returns {Promise<boolean>} - True if the update was successful (API returned 2xx), false otherwise.
  */
 async function updateOrderStatusOnAdminServer(orderId, status) {
-    const apiUrl = `${ADMIN_API_BASE_URL}/${orderId}/status`; // Append path to base URL
+    const apiUrl = `${ADMIN_API_BASE_URL}/api/recieve-order/${orderId}/status`; // Append path to base URL
     console.log(`📤 Attempting to update order ${orderId} status to '${status}' via ${apiUrl}`);
 
     try {
@@ -187,7 +187,7 @@ async function updateOrderStatusOnAdminServer(orderId, status) {
  * @returns {Promise<boolean>} - True if the update was successful (API returned 2xx), false otherwise.
  */
 async function sendReviewToAdminServer(orderId, rating) {
-    const apiUrl = `${ADMIN_API_BASE_URL}/${orderId}/review`; // Append path to base URL
+    const apiUrl = `${ADMIN_API_BASE_URL}/api/recieve-order/${orderId}/review`; // Append path to base URL
     console.log(`📤 Sending review for order ${orderId} (Rating: ${rating}) to ${apiUrl}`);
     try {
         const axiosConfig = { headers: { 'Content-Type': 'application/json' } };
@@ -323,11 +323,11 @@ app.post("/web-data", async (req, res, next) => {
         };
 
         // 4. Send to Admin Server
-        console.log(`📤 /web-data: Sending order payload to Admin Server: ${ADMIN_API_BASE_URL}`);
+        console.log(`📤 /web-data: Sending order payload to Admin Server: ${`${ADMIN_API_BASE_URL}/api/receive-order`}`);
         const axiosConfig = { headers: { 'Content-Type': 'application/json' } };
         if (ADMIN_API_KEY) axiosConfig.headers['X-API-Key'] = ADMIN_API_KEY;
 
-        const adminApiResponse = await axios.post(ADMIN_API_BASE_URL, orderPayload, axiosConfig); // POST to base URL
+        const adminApiResponse = await axios.post(`${ADMIN_API_BASE_URL}/api/receive-order`, orderPayload, axiosConfig); // POST to base URL
 
         // 5. Handle Admin Response
         if (adminApiResponse.status === 201 && adminApiResponse.data?.order?._id) {
