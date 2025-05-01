@@ -390,8 +390,9 @@ app.post("/web-data", async (req, res, next) => {
                 messageToOwner += "\n";
 
                 if (Array.isArray(item.topping) && item.topping.length > 0) {
-                    messageToOwner += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
-                }
+                    // Assuming item.topping is an array of strings like ['Cheese', '#Special Spice']
+                    const sanitizedToppings = item.topping.map(topping => sanitizeMarkdownV2(String(topping))).join(", "); // Sanitize each one
+                    messageToOwner += `    🧀 Toppings: ${sanitizedToppings}\n`; }
             });
             if (user.comment) messageToOwner += `\n💬 *Comment:* ${sanitizeMarkdownV2(user.comment)}\n`;
             messageToOwner += `\n💰 *Total:* ${totalPrice}₽`;
