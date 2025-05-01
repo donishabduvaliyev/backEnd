@@ -336,7 +336,7 @@ app.post("/web-data", async (req, res, next) => {
             console.log(`✅ /web-data: Order saved on admin server. DB Order ID: ${databaseOrderID}`);
 
             // 6. Notify Owners
-            let messageToOwner = `📝 *New Order Received* \\(#${databaseOrderID.toString().slice(-6)}\\)\n\n`;
+            let messageToOwner = `📝 *New Order Received* \\(${databaseOrderID.toString().slice(-6)}\\)\n\n`;
             messageToOwner += `👤 *Customer:* ${sanitizeMarkdownV2(user.name)}\n`;
             if (user.phone) messageToOwner += `📞 *Phone:* ${sanitizeMarkdownV2(user.phone)}\n`;
             messageToOwner += `🚚 *Type:* ${sanitizeMarkdownV2(user.deliveryType)}\n`;
