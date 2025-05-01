@@ -387,7 +387,7 @@ app.post("/web-data", async (req, res, next) => {
                     messageToOwner += `, ${item.size.name}sm`;
                 }
 
-                message += "\n";
+                messageToOwner += "\n";
 
                 if (Array.isArray(item.topping) && item.topping.length > 0) {
                     messageToOwner += `   🧀 Toppings: ${item.topping.map(topping => topping).join(", ")}\n`;
