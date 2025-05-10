@@ -127,15 +127,22 @@ async function isBotWorking() {
             return false;
         }
 
+        // Example check before calculating minutes
+        if (typeof todaySchedule.startHour !== 'number' || typeof todaySchedule.endHour !== 'number') {
+            console.error(`⚠️ Invalid startHour/endHour for ${dayOfWeek}. Assuming closed.`);
+            return false;
+        }
         const startMinutes = todaySchedule.startHour * 60;
         const endMinutes = todaySchedule.endHour * 60;
+        // const startMinutes = todaySchedule.startHour * 60;
+        // const endMinutes = todaySchedule.endHour * 60;
 
-        if (endMinutes < startMinutes) { // Overnight schedule
+        if (endMinutes < startMinutes) {
             if (currentTimeMinutes >= startMinutes || currentTimeMinutes < endMinutes) {
                 console.log(`ℹ️ Bot is working (overnight). Current: ${currentTimeMinutes}, Range: ${startMinutes}-${endMinutes}`);
                 return true;
             }
-        } else { // Same-day schedule
+        } else {
             if (currentTimeMinutes >= startMinutes && currentTimeMinutes < endMinutes) {
                 console.log(`ℹ️ Bot is working. Current: ${currentTimeMinutes}, Range: ${startMinutes}-${endMinutes}`);
                 return true;
@@ -392,7 +399,8 @@ app.post("/web-data", async (req, res, next) => {
                 if (Array.isArray(item.topping) && item.topping.length > 0) {
                     // Assuming item.topping is an array of strings like ['Cheese', '#Special Spice']
                     const sanitizedToppings = item.topping.map(topping => sanitizeMarkdownV2(String(topping))).join(", "); // Sanitize each one
-                    messageToOwner += `    🧀 Toppings: ${sanitizedToppings}\n`; }
+                    messageToOwner += `    🧀 Toppings: ${sanitizedToppings}\n`;
+                }
             });
             if (user.comment) messageToOwner += `\n💬 *Comment:* ${sanitizeMarkdownV2(user.comment)}\n`;
             messageToOwner += `\n💰 *Total:* ${totalPrice}₽`;
