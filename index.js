@@ -502,9 +502,9 @@ bot.onText(/\/start/, async (msg) => {
     const chatId = String(msg.chat.id);
     console.log(`▶️ /start received from chat ID: ${chatId}`);
     const botActive = await isBotWorking();
-    if (!botActive) {
-        return bot.sendMessage(chatId, "❌ Restaurant hozir ishlamayapti, iltimos keyinroq urinib ko'ring.").catch(err => console.error("Error sending closed message:", err));
-    }
+    // if (!botActive) {
+    //     return bot.sendMessage(chatId, "❌ Restaurant hozir ishlamayapti, iltimos keyinroq urinib ko'ring.").catch(err => console.error("Error sending closed message:", err));
+    // }
     try {
         const user = await botUser.findOne({ chatId });
         if (user?.phone) {
