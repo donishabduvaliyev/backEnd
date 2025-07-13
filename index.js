@@ -41,27 +41,27 @@ const app = express();
 const bot = new TelegramBot(TOKEN);
 
 // --- Middleware ---
-const allowedOrigins = [
-    "http://localhost:5174", // Frontend dev
-    "http://localhost:5173", // Another frontend dev port?
-    "https://test-web-site-template.netlify.app", // Frontend prod
-    "https://web.telegram.org", // Telegram Web Apps
-    `http://localhost:${BOT_SERVER_PORT}` // Allow requests from self if needed
-];
+// const allowedOrigins = [
+//     "http://localhost:5174", // Frontend dev
+//     "http://localhost:5173", // Another frontend dev port?
+//     "https://test-web-site-template.netlify.app", // Frontend prod
+//     "https://web.telegram.org", // Telegram Web Apps
+//     `http://localhost:${BOT_SERVER_PORT}` // Allow requests from self if needed
+// ];
 
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin) || origin.includes("web.telegram.org")) {
-            callback(null, true);
-        } else {
-            console.warn(`🚫 CORS blocked origin: ${origin}`);
-            callback(new Error(`Origin ${origin} not allowed by CORS`));
-        }
-    },
-    methods: "GET,POST,PUT,DELETE",
-    allowedHeaders: "Content-Type, Authorization, X-API-Key", // Added X-API-Key
-    credentials: false
-}));
+// app.use(cors({
+//     origin: function (origin, callback) {
+//         if (!origin || allowedOrigins.includes(origin) || origin.includes("web.telegram.org")) {
+//             callback(null, true);
+//         } else {
+//             console.warn(`🚫 CORS blocked origin: ${origin}`);
+//             callback(new Error(`Origin ${origin} not allowed by CORS`));
+//         }
+//     },
+//     methods: "GET,POST,PUT,DELETE",
+//     allowedHeaders: "Content-Type, Authorization, X-API-Key", // Added X-API-Key
+//     credentials: false
+// }));
 
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
